@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const { Schema, model, Types } = mongoose;
 
@@ -28,6 +29,15 @@ const UserSchema = new Schema(
     },
     address: {
       type: String,
+    },
+
+    isSubscribed: {
+      type: Boolean,
+      default: false,
+    },
+    subscriptionPlan: {
+      type: ObjectId,
+      ref: "SubscriptionPlan",
     },
   },
   {

@@ -22,21 +22,21 @@ const EnumSocketEvent = {
   SEND_MESSAGE: "send_message",
 };
 
-const EnumLoginProvider = {
-  LOCAL: "local",
-  GOOGLE: "google",
-  APPLE: "apple",
-};
-
 const EnumUserAccountStatus = {
   VERIFIED: "verified",
   UNVERIFIED: "unverified",
+};
+
+const EnumSubscriptionPlan = {
+  BRONZE: "bronze",
+  SILVER: "silver",
+  GOLD: "gold",
 };
 
 module.exports = {
   EnumUserRole,
   EnumPaymentStatus,
   EnumSocketEvent,
-  EnumLoginProvider,
   EnumUserAccountStatus,
+  EnumSubscriptionPlan,
 };
