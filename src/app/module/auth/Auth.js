@@ -27,7 +27,7 @@ const AuthSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ["USER", "ADMIN"],
+      enum: ["USER", "ADMIN", "SUPER_ADMIN"],
       required: true,
     },
     isVerified: {

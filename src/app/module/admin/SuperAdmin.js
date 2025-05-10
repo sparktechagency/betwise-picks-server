@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { Schema, model, Types } = mongoose;
 
-const AdminSchema = new Schema(
+const SuperAdminSchema = new Schema(
   {
     authId: {
       type: Types.ObjectId,
@@ -31,6 +31,6 @@ const AdminSchema = new Schema(
   }
 );
 
-const Admin = model("Admin", AdminSchema);
+const SuperAdmin = model("SuperAdmin", SuperAdminSchema);
 
-module.exports = Admin;
+module.exports = SuperAdmin;
