@@ -2,49 +2,50 @@ const auth = require("../../middleware/auth");
 const express = require("express");
 const DashboardController = require("./dashboard.controller");
 const config = require("../../../config");
+const { uploadFile } = require("../../middleware/fileUploader");
 
 const router = express.Router();
 
-router;
+router
 
-// overview =======================================================================================================================
-// .get(
-//   "/total-overview",
-//   auth(config.auth_level.admin),
-//   DashboardController.totalOverview
-// )
-// .get("/revenue", auth(config.auth_level.admin), DashboardController.revenue);
-// driver-user management ==================
-// .get("/get-user", auth(config.auth_level.admin), DashboardController.getUser)
+  // overview =======================================================================================================================
+  // .get(
+  //   "/total-overview",
+  //   auth(config.auth_level.admin),
+  //   DashboardController.totalOverview
+  // )
+  // .get("/revenue", auth(config.auth_level.admin), DashboardController.revenue);
+  // driver-user management ==================
+  // .get("/get-user", auth(config.auth_level.admin), DashboardController.getUser)
 
-// admin management =======================================================================================================================
-// .post(
-//   "/post-admin",
-//   auth(config.auth_level.super_admin),
-//   uploadFile(),
-//   DashboardController.postAdmin
-// )
-// .get(
-//   "/get-admin",
-//   auth(config.auth_level.super_admin),
-//   DashboardController.getAdmin
-// )
-// .get(
-//   "/get-all-admins",
-//   auth(config.auth_level.super_admin),
-//   DashboardController.getAllAdmins
-// )
-// .patch(
-//   "/edit-admin",
-//   auth(config.auth_level.admin),
-//   uploadFile(),
-//   DashboardController.editAdmin
-// )
-// .patch(
-//   "/block-unblock-admin",
-//   auth(config.auth_level.super_admin),
-//   DashboardController.blockUnblockAdmin
-// )
+  // admin management =======================================================================================================================
+  .post(
+    "/post-admin",
+    auth(config.auth_level.super_admin),
+    uploadFile(),
+    DashboardController.postAdmin
+  )
+  .get(
+    "/get-admin",
+    auth(config.auth_level.admin),
+    DashboardController.getAdmin
+  )
+  .get(
+    "/get-all-admins",
+    auth(config.auth_level.super_admin),
+    DashboardController.getAllAdmins
+  )
+  .patch(
+    "/edit-admin",
+    auth(config.auth_level.admin),
+    uploadFile(),
+    DashboardController.editAdmin
+  )
+  .patch(
+    "/block-unblock-admin",
+    auth(config.auth_level.super_admin),
+    DashboardController.blockUnblockAdmin
+  );
 
 // // user management =======================================================================================================================
 // .get("/get-user", auth(config.auth_level.admin), DashboardController.getUser)
