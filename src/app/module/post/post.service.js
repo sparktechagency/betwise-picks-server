@@ -11,9 +11,7 @@ const postPost = async (userData, payload) => {
 const getPost = async (userData, query) => {
   validateFields(query, ["postId"]);
 
-  const post = await Post.findOne({
-    _id: query.postId,
-  }).lean();
+  const post = await Post.findOne({ _id: query.postId }).lean();
 
   if (!post) throw new ApiError(status.NOT_FOUND, "Post not found");
 
@@ -28,7 +26,7 @@ const getAllPosts = async (userData, query) => {
     .paginate()
     .fields();
 
-  const [post, meta] = await Promise.all([
+  const [posts, meta] = await Promise.all([
     postQuery.modelQuery,
     postQuery.countTotal(),
   ]);
@@ -46,9 +44,7 @@ const updatePost = async (userData, payload) => {
 const deletePost = async (userData, payload) => {
   validateFields(payload, ["postId"]);
 
-  const post = await Post.deleteOne({
-    _id: payload.postId,
-  });
+  const post = await Post.deleteOne({ _id: payload.postId });
 
   if (!post.deletedCount)
     throw new ApiError(status.NOT_FOUND, "Post not found");

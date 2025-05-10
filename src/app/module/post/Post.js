@@ -1,17 +1,13 @@
+const { Schema, model } = require("mongoose");
+const ObjectId = Schema.Types.ObjectId;
 
-    const { Schema, model } = require("mongoose");
-    const ObjectId = Schema.Types.ObjectId;
+const postSchema = new Schema(
+  {},
+  {
+    timestamps: true,
+  }
+);
 
-    const postSchema = new Schema(
-    {
-        
-    },
-    {
-        timestamps: true,
-    }
-    );
+const Post = model("Post", postSchema);
 
-    const Post = model("Post", postSchema);
-
-    module.exports = Post;
-    
+module.exports = Post;

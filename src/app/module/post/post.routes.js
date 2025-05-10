@@ -6,7 +6,7 @@ const PostController = require("./post.controller");
 const router = express.Router();
 
 router
-  .post("/post-post", auth(config.auth_level.user), PostController.postPost)
+  .post("/post-post", auth(config.auth_level.admin), PostController.postPost)
   .get("/get-post", auth(config.auth_level.user), PostController.getPost)
   .get(
     "/get-all-posts",
@@ -15,12 +15,12 @@ router
   )
   .patch(
     "/update-post",
-    auth(config.auth_level.user),
-    PostController.getAllPosts
+    auth(config.auth_level.admin),
+    PostController.updatePost
   )
   .delete(
     "/delete-post",
-    auth(config.auth_level.user),
+    auth(config.auth_level.admin),
     PostController.deletePost
   );
 

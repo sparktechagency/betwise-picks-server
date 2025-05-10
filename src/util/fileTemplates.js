@@ -108,7 +108,7 @@ const routesTemplate = (moduleName) => {
         .post("/post-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.post${moduleName})
         .get("/get-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.get${moduleName})
         .get("/get-all-${moduleNameLowerCase}s", auth(config.auth_level.user), ${moduleName}Controller.getAll${moduleName}s)
-        .patch("/update-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.getAll${moduleName}s)
+        .patch("/update-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.update${moduleName}s)
         .delete("/delete-${moduleNameLowerCase}", auth(config.auth_level.user), ${moduleName}Controller.delete${moduleName});
 
     module.exports = router;
@@ -154,7 +154,7 @@ const serviceTemplate = (moduleName) => {
         .paginate()
         .fields();
 
-        const [${moduleNameLowerCase}, meta] = await Promise.all([
+        const [${moduleNameLowerCase}s, meta] = await Promise.all([
         ${moduleNameLowerCase}Query.modelQuery,
         ${moduleNameLowerCase}Query.countTotal(),
         ]);
