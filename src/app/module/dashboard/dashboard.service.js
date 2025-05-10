@@ -1,6 +1,6 @@
 const { default: status } = require("http-status");
 
-// overview ========================
+// overview ===============================================================================================================================
 
 const getRevenue = async (query) => {
   const { year: strYear } = query;
@@ -252,6 +252,179 @@ const growth = async (query) => {
   };
 };
 
-const DashboardService = { totalOverview };
+// admin management =======================================================================================================================
+const postAdmin = async (req) => {
+  const { body: payload, files, user } = req;
+
+  validateFields(files, [
+    "profile_image",
+    "id_or_passport_image",
+    "psv_license_image",
+    "driving_license_image",
+  ]);
+  validateFields(payload, [
+    "name",
+    "email",
+    "password",
+    "phoneNumber",
+    "address",
+    "idOrPassportNo",
+    "drivingLicenseNo",
+    "licenseType",
+    "licenseExpiry",
+  ]);
+
+  const authData = {
+    name: payload.name,
+    email: payload.email,
+    password: payload.password,
+    role: EnumUserRole.DRIVER,
+    isActive: true,
+  };
+
+  const auth = await Auth.create(authData);
+
+  const driverData = {
+    authId: auth._id,
+    name: payload.name,
+    email: payload.email,
+    password: payload.password,
+    role: EnumUserRole.DRIVER,
+    phoneNumber: payload.phoneNumber,
+    address: payload.address,
+    isAvailable: true,
+    idOrPassportNo: payload.idOrPassportNo,
+    drivingLicenseNo: payload.drivingLicenseNo,
+    licenseType: payload.licenseType,
+    licenseExpiry: payload.licenseExpiry,
+    profile_image: files.profile_image[0].path,
+    id_or_passport_image: files.id_or_passport_image[0].path,
+    psv_license_image: files.psv_license_image[0].path,
+    driving_license_image: files.driving_license_image[0].path,
+    userAccountStatus: UserAccountStatus.VERIFIED,
+  };
+
+  const driver = await User.create(driverData);
+
+  EmailHelpers.sendAddDriverTemp(payload.email, {
+    password: payload.password,
+    ...driver.toObject(),
+  });
+
+  return driver;
+};
+
+const getAdmin = async (query) => {
+  validateFields(query, ["driverId"]);
+
+  const driver = await User.findById(query.driverId)
+    .populate("authId assignedCar")
+    .lean();
+  if (!driver) throw new ApiError(status.NOT_FOUND, "Driver not found");
+
+  return driver;
+};
+
+const getAllAdmins = async (query) => {
+  validateFields(query, ["role"]);
+
+  if (!Object.values(EnumUserRole).includes(query.role))
+    throw new ApiError(status.BAD_REQUEST, "Invalid role");
+
+  const driversQuery = new QueryBuilder(
+    User.find({ role: query.role })
+      .populate([
+        {
+          path: "authId",
+        },
+      ])
+      .sort({ email: 1 })
+      .lean(),
+    query
+  )
+    .search(["name", "email", "phoneNumber"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const [result, meta] = await Promise.all([
+    driversQuery.modelQuery,
+    driversQuery.countTotal(),
+  ]);
+
+  return {
+    meta,
+    result,
+  };
+};
+
+const editAdmin = async (req) => {
+  validateFields(req.body, ["authId", "userId"]);
+
+  const { body, files = {} } = req;
+  const { email, password, name, userId, authId, ...otherFields } = body || {};
+
+  if (email || password)
+    throw new ApiError(status.BAD_REQUEST, "Email & Password can't be changed");
+
+  const driver = await User.findOne({
+    _id: body.userId,
+    authId: body.authId,
+  });
+
+  if (!driver) throw new ApiError(status.BAD_REQUEST, "Driver not found.");
+
+  const updateData = { name, ...otherFields };
+
+  const fileFields = [
+    { key: "profile_image", oldPath: driver.profile_image },
+    { key: "id_or_passport_image", oldPath: driver.id_or_passport_image },
+    { key: "psv_license_image", oldPath: driver.psv_license_image },
+    { key: "driving_license_image", oldPath: driver.driving_license_image },
+  ];
+
+  for (const { key, oldPath } of fileFields) {
+    if (files[key]) {
+      updateData[key] = files[key][0].path;
+      unlinkFile(oldPath);
+    }
+  }
+
+  const [updatedDriver] = await Promise.all([
+    User.findByIdAndUpdate(userId, updateData, { new: true }).lean(),
+
+    Auth.findByIdAndUpdate(authId, { name }, { new: true }).lean(),
+  ]);
+
+  return updatedDriver;
+};
+
+const blockUnblockAdmin = async (payload) => {
+  validateFields(payload, ["authId"]);
+
+  const { authId, isBlocked } = payload;
+
+  const admin = await Auth.findByIdAndUpdate(
+    authId,
+    { $set: { isBlocked } },
+    {
+      new: true,
+      runValidators: true,
+    }
+  ).select("isBlocked email");
+
+  if (!user) throw new ApiError(status.NOT_FOUND, "User not found");
+
+  return admin;
+};
+
+const DashboardService = {
+  postAdmin,
+  getAdmin,
+  getAllAdmins,
+  editAdmin,
+  blockUnblockAdmin,
+};
 
 module.exports = DashboardService;
