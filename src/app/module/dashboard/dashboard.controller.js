@@ -23,8 +23,8 @@ const revenue = catchAsync(async (req, res) => {
 });
 
 const DashboardController = {
-  totalOverview,
-  revenue,
+  // totalOverview,
+  // revenue,
 };
 
 module.exports = DashboardController;

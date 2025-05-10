@@ -1,62 +1,108 @@
 const { default: status } = require("http-status");
 
 // overview ========================
-const revenue = async (query) => {
+
+const getRevenue = async (query) => {
   const { year: strYear } = query;
+
+  validateFields(query, ["year"]);
+
   const year = Number(strYear);
-
-  if (!year) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Missing year");
-  }
-
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year + 1, 0, 1);
-
-  const distinctYears = await Transaction.aggregate([
+  const result = await Payment.aggregate([
     {
-      $group: {
-        _id: { $year: "$createdAt" },
-      },
-    },
-    {
-      $sort: { _id: -1 },
-    },
-    {
-      $project: {
-        year: "$_id",
-        _id: 0,
+      $facet: {
+        distinctYears: [
+          {
+            $group: {
+              _id: { $year: "$createdAt" },
+            },
+          },
+          {
+            $sort: { _id: 1 },
+          },
+          {
+            $project: {
+              year: "$_id",
+              _id: 0,
+            },
+          },
+        ],
+        monthlyRevenue: [
+          {
+            $match: {
+              createdAt: { $gte: startDate, $lt: endDate },
+              paymentFor: "coin_purchase", // ✅ make sure to filter if needed
+              status: EnumPaymentStatus.SUCCEEDED,
+            },
+          },
+          {
+            $project: {
+              amountForCoinPurchase: 1,
+              month: { $month: "$createdAt" },
+            },
+          },
+          {
+            $group: {
+              _id: "$month",
+              totalRevenue: { $sum: "$amountForCoinPurchase" },
+            },
+          },
+          {
+            $sort: { _id: 1 },
+          },
+        ],
+        totalRevenueAllTime: [
+          {
+            $match: {
+              paymentFor: EnumPaymentFor.COIN_PURCHASE,
+              status: EnumPaymentStatus.SUCCEEDED,
+            },
+          },
+          {
+            $group: {
+              _id: null,
+              total: { $sum: "$amountForCoinPurchase" },
+            },
+          },
+        ],
+        tripRevenueBreakdown: [
+          {
+            $match: {
+              paymentFor: "trip",
+              status: EnumPaymentStatus.SUCCEEDED,
+            },
+          },
+          {
+            $group: {
+              _id: "$paymentType", // cash / coin
+              total: {
+                $sum: {
+                  $add: [
+                    { $ifNull: ["$amountInCash", 0] },
+                    { $ifNull: ["$amountInCoins", 0] },
+                  ],
+                },
+              },
+            },
+          },
+          {
+            $sort: { total: 1 },
+          },
+        ],
       },
     },
   ]);
+
+  const {
+    distinctYears = [],
+    monthlyRevenue = [],
+    totalRevenueAllTime = [],
+    tripRevenueBreakdown = [],
+  } = result[0] || {};
 
   const totalYears = distinctYears.map((item) => item.year);
-
-  const revenue = await Subscription.aggregate([
-    {
-      $match: {
-        createdAt: {
-          $gte: startDate,
-          $lt: endDate,
-        },
-        // paymentStatus: "succeeded", // Only include successful payments
-      },
-    },
-    {
-      $project: {
-        price: 1, // Only keep the price field
-        month: { $month: "$createdAt" }, // Extract the month from createdAt
-      },
-    },
-    {
-      $group: {
-        _id: "$month", // Group by the month
-        totalRevenue: { $sum: "$price" }, // Sum up the price for each month
-      },
-    },
-    {
-      $sort: { _id: 1 }, // Sort the result by month (ascending)
-    },
-  ]);
 
   const monthNames = [
     "January",
@@ -73,35 +119,139 @@ const revenue = async (query) => {
     "December",
   ];
 
-  const monthlyRevenue = monthNames.reduce((acc, month) => {
+  const monthlyRevenueObj = monthNames.reduce((acc, month) => {
     acc[month] = 0;
     return acc;
   }, {});
 
-  revenue.forEach((r) => {
+  monthlyRevenue.forEach((r) => {
     const monthName = monthNames[r._id - 1];
-    monthlyRevenue[monthName] = r.totalRevenue;
+    monthlyRevenueObj[monthName] = r.totalRevenue;
+  });
+
+  const tripPaymentAnalysis = {};
+  tripRevenueBreakdown.forEach((item) => {
+    tripPaymentAnalysis[item._id] = item.total;
   });
 
   return {
+    totalRevenueAllTime: totalRevenueAllTime[0]?.total || 0,
+    tripPaymentAnalysis,
     total_years: totalYears,
-    monthlyRevenue,
+    monthlyRevenue: monthlyRevenueObj,
   };
 };
 
 const totalOverview = async () => {
-  const [totalAuth, totalUser] = await Promise.all([
+  const [
+    totalDriver,
+    onlineDriver,
+    totalUser,
+    onlineUser,
+    totalAdmin,
+    totalAuth,
+    totalCars,
+  ] = await Promise.all([
+    User.countDocuments({ role: EnumUserRole.DRIVER }),
+    User.countDocuments({ role: EnumUserRole.DRIVER, isOnline: true }),
+    User.countDocuments({ role: EnumUserRole.USER }),
+    User.countDocuments({ role: EnumUserRole.USER, isOnline: true }),
+    Admin.countDocuments(),
     Auth.countDocuments(),
-    User.countDocuments(),
-    Services.countDocuments(),
+    Car.countDocuments(),
   ]);
 
   return {
-    totalAuth,
+    totalDriver,
+    onlineDriver,
     totalUser,
+    onlineUser,
+    totalAdmin,
+    totalAuth,
+    totalCars,
   };
 };
 
-const DashboardService = { revenue, totalOverview };
+const growth = async (query) => {
+  const { year: yearStr, role } = query;
+
+  validateFields(query, ["role", "year"]);
+
+  const year = Number(yearStr);
+  const startOfYear = new Date(year, 0, 1);
+  const endOfYear = new Date(year + 1, 0, 1);
+
+  const months = Array.from({ length: 12 }, (_, i) =>
+    new Date(0, i).toLocaleString("en", { month: "long" })
+  );
+
+  // Aggregate monthly registration counts and list of all years
+  const [monthlyRegistration, distinctYears] = await Promise.all([
+    Auth.aggregate([
+      {
+        $match: {
+          role: role,
+          createdAt: {
+            $gte: startOfYear,
+            $lt: endOfYear,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: "$createdAt" },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          month: "$_id",
+          count: 1,
+          _id: 0,
+        },
+      },
+    ]),
+    Auth.aggregate([
+      {
+        $match: {
+          role: role,
+        },
+      },
+      {
+        $group: {
+          _id: { $year: "$createdAt" },
+        },
+      },
+      {
+        $project: {
+          year: "$_id",
+          _id: 0,
+        },
+      },
+      {
+        $sort: {
+          year: 1,
+        },
+      },
+    ]),
+  ]);
+
+  const total_years = distinctYears.map((item) => item.year);
+
+  // Initialize result object with all months set to 0
+  const result = months.reduce((acc, month) => ({ ...acc, [month]: 0 }), {});
+
+  // Populate result with actual registration counts
+  monthlyRegistration.forEach(({ month, count }) => {
+    result[months[month - 1]] = count;
+  });
+
+  return {
+    total_years,
+    monthlyRegistration: result,
+  };
+};
+
+const DashboardService = { totalOverview };
 
 module.exports = DashboardService;
