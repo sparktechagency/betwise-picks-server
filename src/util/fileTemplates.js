@@ -30,8 +30,8 @@ const controllerTemplate = (moduleName) => {
     const sendResponse = require("../../../util/sendResponse");
     const catchAsync = require("../../../util/catchAsync");
 
-    const create${moduleName} = catchAsync(async (req, res) => {
-    const result = await ${moduleName}Service.create${moduleName}(req.user, req.body);
+    const post${moduleName} = catchAsync(async (req, res) => {
+    const result = await ${moduleName}Service.post${moduleName}(req.user, req.body);
     sendResponse(res, {
         statusCode: 200,
         success: true,
@@ -81,7 +81,7 @@ const controllerTemplate = (moduleName) => {
     });
 
     const ${moduleName}Controller = {
-    create${moduleName},
+    post${moduleName},
     get${moduleName},
     getAll${moduleName}s,
     update${moduleName},
