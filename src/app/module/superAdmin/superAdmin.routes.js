@@ -1,26 +1,26 @@
 const auth = require("../../middleware/auth");
 const express = require("express");
-const { EnumUserRole } = require("../../../util/enum");
 const { uploadFile } = require("../../middleware/fileUploader");
 const { SuperAdminController } = require("./superAdmin.controller");
+const config = require("../../../config");
 
 const router = express.Router();
 
 router
   .get(
     "/profile",
-    auth(EnumUserRole.SUPER_ADMIN),
+    auth(config.auth_level.super_admin),
     SuperAdminController.getProfile
   )
   .patch(
     "/edit-profile",
-    auth(EnumUserRole.SUPER_ADMIN),
+    auth(config.auth_level.super_admin),
     uploadFile(),
     SuperAdminController.updateProfile
   )
   .delete(
     "/delete-account",
-    auth(EnumUserRole.SUPER_ADMIN),
+    auth(config.auth_level.super_admin),
     SuperAdminController.deleteMyAccount
   );
 

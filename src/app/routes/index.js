@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const AuthRoutes = require("../module/auth/auth.routes");
-// const AdminRoutes = require("../module/admin/admin.routes");
+const AdminRoutes = require("../module/admin/admin.routes");
 const SuperAdminRoutes = require("../module/superAdmin/superAdmin.routes");
 const UserRoutes = require("../module/user/user.routes");
 const DashboardRoutes = require("../module/dashboard/dashboard.routes");
@@ -20,10 +20,10 @@ const moduleRoutes = [
     path: "/user",
     route: UserRoutes,
   },
-  // {
-  //   path: "/admin",
-  //   route: AdminRoutes,
-  // },
+  {
+    path: "/admin",
+    route: AdminRoutes,
+  },
   {
     path: "/super-admin",
     route: SuperAdminRoutes,
