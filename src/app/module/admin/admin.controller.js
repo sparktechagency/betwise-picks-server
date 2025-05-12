@@ -1,40 +1,63 @@
+const AdminService = require("./admin.service");
 const sendResponse = require("../../../util/sendResponse");
-const { AdminService } = require("./admin.service");
 const catchAsync = require("../../../util/catchAsync");
 
-const updateProfile = catchAsync(async (req, res) => {
-  const result = await AdminService.updateProfile(req);
+const postAdmin = catchAsync(async (req, res) => {
+  const result = await AdminService.postAdmin(req.user, req.body);
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Profile updated successfully",
+    message: "Admin created",
     data: result,
   });
 });
 
-const getProfile = catchAsync(async (req, res) => {
-  const result = await AdminService.getProfile(req.user);
+const getAdmin = catchAsync(async (req, res) => {
+  const result = await AdminService.getAdmin(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Admin retrieved successfully",
+    message: "Admin retrieved",
     data: result,
   });
 });
 
-const deleteMyAccount = catchAsync(async (req, res) => {
-  await AdminService.deleteMyAccount(req.body);
+const getAllAdmins = catchAsync(async (req, res) => {
+  const result = await AdminService.getAllAdmins(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Account deleted!",
+    message: "Admins retrieved",
+    data: result,
+  });
+});
+
+const updateAdmin = catchAsync(async (req, res) => {
+  const result = await AdminService.updateAdmin(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Admin updated",
+    data: result,
+  });
+});
+
+const deleteAdmin = catchAsync(async (req, res) => {
+  const result = await AdminService.deleteAdmin(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Admin deleted",
+    data: result,
   });
 });
 
 const AdminController = {
-  updateProfile,
-  getProfile,
-  deleteMyAccount,
+  postAdmin,
+  getAdmin,
+  getAllAdmins,
+  updateAdmin,
+  deleteAdmin,
 };
 
-module.exports = { AdminController };
+module.exports = AdminController;

@@ -10,7 +10,8 @@ const { logger } = require("../../../util/logger");
 const Auth = require("./Auth");
 const codeGenerator = require("../../../util/codeGenerator");
 const User = require("../user/User");
-const Admin = require("../admin/Admin");
+// const Admin = require("../admin/Admin");
+const SuperAdmin = require("../superAdmin/SuperAdmin");
 const validateFields = require("../../../util/validateFields");
 const EmailHelpers = require("../../../util/emailHelpers");
 
@@ -71,8 +72,7 @@ const registrationAccount = async (payload) => {
     };
   }
 
-  if (role !== EnumUserRole.ADMIN)
-    EmailHelpers.sendActivationEmail(email, data);
+  if (role === EnumUserRole.USER) EmailHelpers.sendActivationEmail(email, data);
 
   const auth = await Auth.create(authData);
 
@@ -82,8 +82,13 @@ const registrationAccount = async (payload) => {
     email,
   };
 
-  if (role === EnumUserRole.ADMIN) await Admin.create(userData);
-  else await User.create(userData);
+  switch (role) {
+    case EnumUserRole.SUPER_ADMIN:
+      await SuperAdmin.create(userData);
+      break;
+    default:
+      await User.create(userData);
+  }
 
   return {
     isActive: false,
@@ -136,6 +141,9 @@ const activateAccount = async (payload) => {
 
   let result;
   switch (auth.role) {
+    case EnumUserRole.SUPER_ADMIN:
+      result = await SuperAdmin.findOne({ authId: auth._id }).lean();
+      break;
     case EnumUserRole.ADMIN:
       result = await Admin.findOne({ authId: auth._id }).lean();
       break;
@@ -190,11 +198,20 @@ const loginAccount = async (payload) => {
 
   let result;
   switch (auth.role) {
+    case EnumUserRole.SUPER_ADMIN:
+      result = await SuperAdmin.findOne({ authId: auth._id })
+        .populate("authId")
+        .lean();
+      break;
     case EnumUserRole.ADMIN:
-      result = await Admin.findOne({ authId: auth._id }).populate("authId");
+      result = await Admin.findOne({ authId: auth._id })
+        .populate("authId")
+        .lean();
       break;
     default:
-      result = await User.findOne({ authId: auth._id }).populate("authId");
+      result = await User.findOne({ authId: auth._id })
+        .populate("authId")
+        .lean();
   }
 
   const tokenPayload = {
@@ -210,16 +227,7 @@ const loginAccount = async (payload) => {
     config.jwt.expires_in
   );
 
-  const refreshToken = jwtHelpers.createToken(
-    tokenPayload,
-    config.jwt.refresh_secret,
-    config.jwt.refresh_expires_in
-  );
-
-  return {
-    accessToken,
-    refreshToken,
-  };
+  return { accessToken };
 };
 
 const forgotPass = async (payload) => {

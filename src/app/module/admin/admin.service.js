@@ -1,83 +1,67 @@
 const { default: status } = require("http-status");
-const ApiError = require("../../../error/ApiError");
-const Auth = require("../auth/Auth");
 const Admin = require("./Admin");
-const unlinkFile = require("../../../util/unlinkFile");
+const QueryBuilder = require("../../../builder/queryBuilder");
+const ApiError = require("../../../error/ApiError");
+const validateFields = require("../../../util/validateFields");
 
-const updateProfile = async (req) => {
-  const { files, body: data } = req;
-  const { userId, authId } = req.user;
-  const updatedData = {
-    ...(data.address && { address: data.name }),
-    ...(data.phoneNumber && { phoneNumber: data.name }),
-    ...(data.name && { name: data.name }),
-  };
-  const existingUser = await Admin.findById(userId).lean();
+const postAdmin = async (userData, payload) => {
+  // Add your logic here
+};
 
-  if (files && files.profile_image) {
-    updatedData.profile_image = files.profile_image[0].path;
-    unlinkFile(existingUser.profile_image);
-  }
+const getAdmin = async (userData, query) => {
+  validateFields(query, ["adminId"]);
 
-  const [auth, admin] = await Promise.all([
-    Auth.findByIdAndUpdate(
-      authId,
-      { name: updatedData.name },
-      {
-        new: true,
-      }
-    ),
-    Admin.findByIdAndUpdate(
-      userId,
-      { ...updatedData },
-      {
-        new: true,
-      }
-    ).populate("authId"),
-  ]);
+  const admin = await Admin.findOne({
+    _id: query.adminId,
+  }).lean();
 
-  if (!auth || !admin) throw new ApiError(status.NOT_FOUND, "User not found!");
+  if (!admin) throw new ApiError(status.NOT_FOUND, "Admin not found");
 
   return admin;
 };
 
-const getProfile = async (userData) => {
-  const { userId, authId } = userData;
+const getAllAdmins = async (userData, query) => {
+  const adminQuery = new QueryBuilder(Admin.find({}).lean(), query)
+    .search([])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
 
-  const [auth, result] = await Promise.all([
-    Auth.findById(authId),
-    Admin.findById(userId).populate("authId"),
+  const [admins, meta] = await Promise.all([
+    adminQuery.modelQuery,
+    adminQuery.countTotal(),
   ]);
 
-  if (!result || !auth) throw new ApiError(status.NOT_FOUND, "Admin not found");
-  if (auth.isBlocked)
-    throw new ApiError(status.FORBIDDEN, "You are blocked. Contact support");
-
-  return result;
+  return {
+    meta,
+    admins,
+  };
 };
 
-const deleteMyAccount = async (payload) => {
-  const { email, password } = payload;
+const updateAdmin = async (userData, payload) => {
+  // Add your logic here
+};
 
-  const isUserExist = await Auth.isAuthExist(email);
-  if (!isUserExist) throw new ApiError(status.NOT_FOUND, "User does not exist");
-  if (
-    isUserExist.password &&
-    !(await Auth.isPasswordMatched(password, isUserExist.password))
-  ) {
-    throw new ApiError(status.FORBIDDEN, "Password is incorrect");
-  }
+const deleteAdmin = async (userData, payload) => {
+  validateFields(payload, ["adminId"]);
 
-  Promise.all([
-    Auth.deleteOne({ email }),
-    Admin.deleteOne({ authId: isUserExist._id }),
-  ]);
+  const admin = await Admin.deleteOne({
+    _id: payload.adminId,
+  });
+
+  if (!admin.deletedCount)
+    throw new ApiError(status.NOT_FOUND, "Admin not found");
+
+  return admin;
 };
 
 const AdminService = {
-  updateProfile,
-  getProfile,
-  deleteMyAccount,
+  postAdmin,
+  getAdmin,
+  getAllAdmins,
+  updateAdmin,
+  deleteAdmin,
 };
 
-module.exports = { AdminService };
+module.exports = AdminService;
