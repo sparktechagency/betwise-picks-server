@@ -3,9 +3,53 @@ const Admin = require("./Admin");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
+const { EnumUserRole } = require("../../../util/enum");
+const Auth = require("../auth/Auth");
+const EmailHelpers = require("../../../util/emailHelpers");
 
-const postAdmin = async (userData, payload) => {
-  // Add your logic here
+const postAdmin = async (req) => {
+  const { body: payload, files } = req;
+
+  validateFields(files, ["profile_image"]);
+  validateFields(payload, [
+    "name",
+    "email",
+    "password",
+    "confirmPassword",
+    "phoneNumber",
+  ]);
+
+  if (payload.password !== payload.confirmPassword)
+    throw new ApiError(status.BAD_REQUEST, "Passwords do not match");
+
+  const authData = {
+    name: payload.name,
+    email: payload.email,
+    password: payload.password,
+    role: EnumUserRole.ADMIN,
+    isActive: true,
+  };
+
+  const auth = await Auth.create(authData);
+
+  const adminData = {
+    authId: auth._id,
+    name: payload.name,
+    email: payload.email,
+    password: payload.password,
+    role: EnumUserRole.ADMIN,
+    phoneNumber: payload.phoneNumber,
+    profile_image: files.profile_image[0].path,
+  };
+
+  const admin = await Admin.create(adminData);
+
+  EmailHelpers.sendAddAdminEmailTemp(payload.email, {
+    password: payload.password,
+    ...admin.toObject(),
+  });
+
+  return admin;
 };
 
 const getAdmin = async (userData, query) => {

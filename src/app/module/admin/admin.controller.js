@@ -3,7 +3,7 @@ const sendResponse = require("../../../util/sendResponse");
 const catchAsync = require("../../../util/catchAsync");
 
 const postAdmin = catchAsync(async (req, res) => {
-  const result = await AdminService.postAdmin(req.user, req.body);
+  const result = await AdminService.postAdmin(req);
   sendResponse(res, {
     statusCode: 200,
     success: true,
