@@ -4,6 +4,7 @@ const otpResendTemp = require("../mail/otpResendTemp");
 const resetPassEmailTemp = require("../mail/resetPassEmailTemp");
 const signUpEmailTemp = require("../mail/signUpEmailTemp");
 const { sendEmail } = require("../util/sendEmail");
+const addAdminEmailTemp = require("../mail/addAdminEmailTemp");
 
 const sendActivationEmail = async (email, data) => {
   try {
@@ -44,10 +45,24 @@ const sendResetPasswordEmail = async (email, data) => {
   }
 };
 
+const sendAddAdminEmailTemp = async (email, data) => {
+  try {
+    await sendEmail({
+      email,
+      subject: "Admin Account Created",
+      html: addAdminEmailTemp(data),
+    });
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(status.INTERNAL_SERVER_ERROR, "Email was not sent");
+  }
+};
+
 const EmailHelpers = {
   sendActivationEmail,
   sendOtpResendEmail,
   sendResetPasswordEmail,
+  sendAddAdminEmailTemp,
 };
 
 module.exports = EmailHelpers;
