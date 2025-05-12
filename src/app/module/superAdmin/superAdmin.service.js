@@ -1,7 +1,7 @@
 const { default: status } = require("http-status");
 const ApiError = require("../../../error/ApiError");
 const Auth = require("../auth/Auth");
-const Admin = require("./Admin");
+const SuperAdmin = require("./SuperAdmin");
 const unlinkFile = require("../../../util/unlinkFile");
 
 const updateProfile = async (req) => {
@@ -12,7 +12,7 @@ const updateProfile = async (req) => {
     ...(data.phoneNumber && { phoneNumber: data.name }),
     ...(data.name && { name: data.name }),
   };
-  const existingUser = await Admin.findById(userId).lean();
+  const existingUser = await SuperAdmin.findById(userId).lean();
 
   if (files && files.profile_image) {
     updatedData.profile_image = files.profile_image[0].path;
@@ -27,7 +27,7 @@ const updateProfile = async (req) => {
         new: true,
       }
     ),
-    Admin.findByIdAndUpdate(
+    SuperAdmin.findByIdAndUpdate(
       userId,
       { ...updatedData },
       {
@@ -46,7 +46,7 @@ const getProfile = async (userData) => {
 
   const [auth, result] = await Promise.all([
     Auth.findById(authId),
-    Admin.findById(userId).populate("authId"),
+    SuperAdmin.findById(userId).populate("authId"),
   ]);
 
   if (!result || !auth) throw new ApiError(status.NOT_FOUND, "Admin not found");
@@ -70,14 +70,14 @@ const deleteMyAccount = async (payload) => {
 
   Promise.all([
     Auth.deleteOne({ email }),
-    Admin.deleteOne({ authId: isUserExist._id }),
+    SuperAdmin.deleteOne({ authId: isUserExist._id }),
   ]);
 };
 
-const AdminService = {
+const SuperAdminService = {
   updateProfile,
   getProfile,
   deleteMyAccount,
 };
 
-module.exports = { AdminService };
+module.exports = { SuperAdminService };

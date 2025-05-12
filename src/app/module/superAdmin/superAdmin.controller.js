@@ -1,9 +1,9 @@
 const sendResponse = require("../../../util/sendResponse");
-const { AdminService } = require("./admin.service");
+const { SuperAdminService } = require("./superAdmin.service");
 const catchAsync = require("../../../util/catchAsync");
 
 const updateProfile = catchAsync(async (req, res) => {
-  const result = await AdminService.updateProfile(req);
+  const result = await SuperAdminService.updateProfile(req);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -13,7 +13,7 @@ const updateProfile = catchAsync(async (req, res) => {
 });
 
 const getProfile = catchAsync(async (req, res) => {
-  const result = await AdminService.getProfile(req.user);
+  const result = await SuperAdminService.getProfile(req.user);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -23,7 +23,7 @@ const getProfile = catchAsync(async (req, res) => {
 });
 
 const deleteMyAccount = catchAsync(async (req, res) => {
-  await AdminService.deleteMyAccount(req.body);
+  await SuperAdminService.deleteMyAccount(req.body);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -31,10 +31,10 @@ const deleteMyAccount = catchAsync(async (req, res) => {
   });
 });
 
-const AdminController = {
+const SuperAdminController = {
   updateProfile,
   getProfile,
   deleteMyAccount,
 };
 
-module.exports = { AdminController };
+module.exports = { SuperAdminController };

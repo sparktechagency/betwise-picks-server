@@ -10,10 +10,10 @@ const { logger } = require("../../../util/logger");
 const Auth = require("./Auth");
 const codeGenerator = require("../../../util/codeGenerator");
 const User = require("../user/User");
-const Admin = require("../admin/Admin");
+// const Admin = require("../admin/Admin");
+const SuperAdmin = require("../superAdmin/SuperAdmin");
 const validateFields = require("../../../util/validateFields");
 const EmailHelpers = require("../../../util/emailHelpers");
-const SuperAdmin = require("../admin/SuperAdmin");
 
 const registrationAccount = async (payload) => {
   const { role, name, password, confirmPassword, email } = payload;
