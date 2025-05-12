@@ -52,12 +52,23 @@ const deleteAdmin = catchAsync(async (req, res) => {
   });
 });
 
+const getProfileAdmin = catchAsync(async (req, res) => {
+  const result = await AdminService.getProfileAdmin(req.user);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Admin retrieved successfully",
+    data: result,
+  });
+});
+
 const AdminController = {
   postAdmin,
   getAdmin,
   getAllAdmins,
   updateAdmin,
   deleteAdmin,
+  getProfileAdmin,
 };
 
 module.exports = AdminController;

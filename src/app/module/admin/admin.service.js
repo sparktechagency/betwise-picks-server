@@ -100,12 +100,28 @@ const deleteAdmin = async (userData, payload) => {
   return admin;
 };
 
+const getProfileAdmin = async (userData) => {
+  const { userId, authId } = userData;
+
+  const [auth, result] = await Promise.all([
+    Auth.findById(authId),
+    Admin.findById(userId).populate("authId"),
+  ]);
+
+  if (!result || !auth) throw new ApiError(status.NOT_FOUND, "Admin not found");
+  if (auth.isBlocked)
+    throw new ApiError(status.FORBIDDEN, "You are blocked. Contact support");
+
+  return result;
+};
+
 const AdminService = {
   postAdmin,
   getAdmin,
   getAllAdmins,
   updateAdmin,
   deleteAdmin,
+  getProfileAdmin,
 };
 
 module.exports = AdminService;

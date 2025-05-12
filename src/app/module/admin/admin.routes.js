@@ -28,6 +28,11 @@ router
     "/delete-admin",
     auth(config.auth_level.super_admin),
     AdminController.deleteAdmin
+  )
+  .get(
+    "/get-profile-admin",
+    auth(config.auth_level.user),
+    AdminController.getProfileAdmin
   );
 
 module.exports = router;
