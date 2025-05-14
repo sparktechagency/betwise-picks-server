@@ -65,7 +65,10 @@ const getAdmin = async (userData, query) => {
 };
 
 const getAllAdmins = async (userData, query) => {
-  const adminQuery = new QueryBuilder(Admin.find({}).lean(), query)
+  const adminQuery = new QueryBuilder(
+    Admin.find({}).populate("authId").lean(),
+    query
+  )
     .search([])
     .filter()
     .sort()
@@ -84,7 +87,52 @@ const getAllAdmins = async (userData, query) => {
 };
 
 const updateAdmin = async (userData, payload) => {
-  // Add your logic here
+  validateFields(payload, ["adminId"]);
+
+  const admin = await Admin.findById(payload.adminId).lean();
+  if (!admin) throw new ApiError(status.NOT_FOUND, "Admin not found");
+
+  const updatedAData = {
+    ...(payload.name && { name: payload.name }),
+    ...(payload.phoneNumber && { phoneNumber: payload.phoneNumber }),
+  };
+
+  const [updatedAdmin] = await Promise.all([
+    Admin.findByIdAndUpdate(payload.adminId, updatedAData, {
+      new: true,
+      runValidators: true,
+    }).populate("authId"),
+
+    Auth.findByIdAndUpdate(
+      admin.authId,
+      {
+        ...(payload.name && { name: payload.name }),
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ),
+  ]);
+
+  return updatedAdmin;
+};
+
+const updateAdminPassword = async (userData, payload) => {
+  validateFields(payload, ["adminId", "password", "confirmPassword"]);
+
+  if (payload.password !== payload.confirmPassword)
+    throw new ApiError(status.BAD_REQUEST, "Passwords do not match");
+
+  const admin = await Admin.findById(payload.adminId).lean();
+  const auth = await Auth.findById(admin.authId);
+
+  if (!admin) throw new ApiError(status.NOT_FOUND, "Admin not found");
+
+  auth.password = payload.password;
+  await auth.save();
+
+  return;
 };
 
 const deleteAdmin = async (userData, payload) => {
@@ -100,12 +148,29 @@ const deleteAdmin = async (userData, payload) => {
   return admin;
 };
 
+const getProfileAdmin = async (userData) => {
+  const { userId, authId } = userData;
+
+  const [auth, result] = await Promise.all([
+    Auth.findById(authId),
+    Admin.findById(userId).populate("authId"),
+  ]);
+
+  if (!result || !auth) throw new ApiError(status.NOT_FOUND, "Admin not found");
+  if (auth.isBlocked)
+    throw new ApiError(status.FORBIDDEN, "You are blocked. Contact support");
+
+  return result;
+};
+
 const AdminService = {
   postAdmin,
   getAdmin,
   getAllAdmins,
   updateAdmin,
   deleteAdmin,
+  getProfileAdmin,
+  updateAdminPassword,
 };
 
 module.exports = AdminService;

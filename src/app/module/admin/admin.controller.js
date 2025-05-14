@@ -52,12 +52,34 @@ const deleteAdmin = catchAsync(async (req, res) => {
   });
 });
 
+const getProfileAdmin = catchAsync(async (req, res) => {
+  const result = await AdminService.getProfileAdmin(req.user);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Admin retrieved successfully",
+    data: result,
+  });
+});
+
+const updateAdminPassword = catchAsync(async (req, res) => {
+  const result = await AdminService.updateAdminPassword(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Password updated successfully",
+    data: result,
+  });
+});
+
 const AdminController = {
   postAdmin,
   getAdmin,
   getAllAdmins,
   updateAdmin,
   deleteAdmin,
+  getProfileAdmin,
+  updateAdminPassword,
 };
 
 module.exports = AdminController;

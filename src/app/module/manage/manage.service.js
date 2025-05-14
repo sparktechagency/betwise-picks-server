@@ -7,6 +7,7 @@ const {
   ContactUs,
 } = require("./Manage");
 const ApiError = require("../../../error/ApiError");
+const validateFields = require("../../../util/validateFields");
 
 const addTermsConditions = async (payload) => {
   const checkIsExist = await TermsConditions.findOne();
@@ -109,31 +110,34 @@ const deleteAboutUs = async (query) => {
 };
 
 const addFaq = async (payload) => {
-  const checkIsExist = await FAQ.findOne();
+  validateFields(payload, ["question", "description"]);
+  return await FAQ.create(payload);
+};
 
-  if (checkIsExist) {
-    const result = await FAQ.findOneAndUpdate({}, payload, {
-      new: true,
-      runValidators: true,
-    });
+const updateFaq = async (payload) => {
+  validateFields(payload, ["faqId", "question", "description"]);
 
-    return {
-      message: "FAQ updated",
-      result,
-    };
-  } else {
-    return await FAQ.create(payload);
-  }
+  const { faqId, ...rest } = payload;
+
+  const result = await FAQ.findOneAndUpdate({ _id: faqId }, rest, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!result) throw new ApiError(status.NOT_FOUND, "FAQ not found");
+
+  return result;
 };
 
 const getFaq = async () => {
-  return await FAQ.findOne({});
+  return await FAQ.find({});
 };
 
 const deleteFaq = async (query) => {
-  const { id } = query;
+  validateFields(query, ["faqId"]);
+  const { faqId } = query;
 
-  const result = await FAQ.deleteOne({ _id: id });
+  const result = await FAQ.deleteOne({ _id: faqId });
 
   if (!result.deletedCount)
     throw new ApiError(status.NOT_FOUND, "FAQ not found");
@@ -185,6 +189,7 @@ const ManageService = {
   getAboutUs,
   deleteAboutUs,
   addFaq,
+  updateFaq,
   getFaq,
   deleteFaq,
   addContactUs,
