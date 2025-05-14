@@ -44,6 +44,11 @@ router
     auth(config.auth_level.admin),
     uploadFile(),
     AdminController.updateProfileImageAdmin
+  )
+  .patch(
+    "/block-unblock-admin",
+    auth(config.auth_level.super_admin),
+    AdminController.blockUnblockAdmin
   );
 
 module.exports = router;

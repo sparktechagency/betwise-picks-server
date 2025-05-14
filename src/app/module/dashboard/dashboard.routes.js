@@ -19,28 +19,7 @@ router
   // .get("/get-user", auth(config.auth_level.admin), DashboardController.getUser)
 
   // admin management =======================================================================================================================
-  .post(
-    "/post-admin",
-    auth(config.auth_level.super_admin),
-    uploadFile(),
-    DashboardController.postAdmin
-  )
-  .get(
-    "/get-admin",
-    auth(config.auth_level.admin),
-    DashboardController.getAdmin
-  )
-  .get(
-    "/get-all-admins",
-    auth(config.auth_level.super_admin),
-    DashboardController.getAllAdmins
-  )
-  .patch(
-    "/edit-admin",
-    auth(config.auth_level.admin),
-    uploadFile(),
-    DashboardController.editAdmin
-  )
+
   .patch(
     "/block-unblock-admin",
     auth(config.auth_level.super_admin),

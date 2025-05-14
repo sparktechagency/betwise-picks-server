@@ -193,6 +193,26 @@ const updateProfileImageAdmin = async (req) => {
   return updatedAdmin;
 };
 
+const blockUnblockAdmin = async (userData, payload) => {
+  validateFields(payload, ["authId", "isBlocked"]);
+
+  const admin = await Admin.findOne({ authId: payload.authId }).lean();
+  if (!admin) throw new ApiError(status.NOT_FOUND, "Admin not found");
+
+  const updatedAdmin = await Auth.findByIdAndUpdate(
+    admin.authId,
+    {
+      isBlocked: payload.isBlocked,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  return updatedAdmin;
+};
+
 const AdminService = {
   postAdmin,
   getAdmin,
@@ -202,6 +222,7 @@ const AdminService = {
   getProfileAdmin,
   updateAdminPassword,
   updateProfileImageAdmin,
+  blockUnblockAdmin,
 };
 
 module.exports = AdminService;
