@@ -24,6 +24,11 @@ router
     auth(config.auth_level.super_admin),
     AdminController.updateAdmin
   )
+  .patch(
+    "/update-admin-password",
+    auth(config.auth_level.super_admin),
+    AdminController.updateAdminPassword
+  )
   .delete(
     "/delete-admin",
     auth(config.auth_level.super_admin),

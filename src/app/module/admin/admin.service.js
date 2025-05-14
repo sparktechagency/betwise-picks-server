@@ -118,6 +118,23 @@ const updateAdmin = async (userData, payload) => {
   return updatedAdmin;
 };
 
+const updateAdminPassword = async (userData, payload) => {
+  validateFields(payload, ["adminId", "password", "confirmPassword"]);
+
+  if (payload.password !== payload.confirmPassword)
+    throw new ApiError(status.BAD_REQUEST, "Passwords do not match");
+
+  const admin = await Admin.findById(payload.adminId).lean();
+  const auth = await Auth.findById(admin.authId);
+
+  if (!admin) throw new ApiError(status.NOT_FOUND, "Admin not found");
+
+  auth.password = payload.password;
+  await auth.save();
+
+  return;
+};
+
 const deleteAdmin = async (userData, payload) => {
   validateFields(payload, ["adminId"]);
 
@@ -153,6 +170,7 @@ const AdminService = {
   updateAdmin,
   deleteAdmin,
   getProfileAdmin,
+  updateAdminPassword,
 };
 
 module.exports = AdminService;

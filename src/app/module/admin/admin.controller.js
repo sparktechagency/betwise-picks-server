@@ -62,6 +62,16 @@ const getProfileAdmin = catchAsync(async (req, res) => {
   });
 });
 
+const updateAdminPassword = catchAsync(async (req, res) => {
+  const result = await AdminService.updateAdminPassword(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Password updated successfully",
+    data: result,
+  });
+});
+
 const AdminController = {
   postAdmin,
   getAdmin,
@@ -69,6 +79,7 @@ const AdminController = {
   updateAdmin,
   deleteAdmin,
   getProfileAdmin,
+  updateAdminPassword,
 };
 
 module.exports = AdminController;
