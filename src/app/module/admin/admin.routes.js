@@ -38,6 +38,12 @@ router
     "/get-profile-admin",
     auth(config.auth_level.user),
     AdminController.getProfileAdmin
+  )
+  .patch(
+    "/update-profile-image-admin",
+    auth(config.auth_level.admin),
+    uploadFile(),
+    AdminController.updateProfileImageAdmin
   );
 
 module.exports = router;
