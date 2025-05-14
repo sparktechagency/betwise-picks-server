@@ -65,7 +65,10 @@ const getAdmin = async (userData, query) => {
 };
 
 const getAllAdmins = async (userData, query) => {
-  const adminQuery = new QueryBuilder(Admin.find({}).lean(), query)
+  const adminQuery = new QueryBuilder(
+    Admin.find({}).populate("authId").lean(),
+    query
+  )
     .search([])
     .filter()
     .sort()
@@ -84,7 +87,35 @@ const getAllAdmins = async (userData, query) => {
 };
 
 const updateAdmin = async (userData, payload) => {
-  // Add your logic here
+  validateFields(payload, ["adminId"]);
+
+  const admin = await Admin.findById(payload.adminId).lean();
+  if (!admin) throw new ApiError(status.NOT_FOUND, "Admin not found");
+
+  const updatedAData = {
+    ...(payload.name && { name: payload.name }),
+    ...(payload.phoneNumber && { phoneNumber: payload.phoneNumber }),
+  };
+
+  const [updatedAdmin] = await Promise.all([
+    Admin.findByIdAndUpdate(payload.adminId, updatedAData, {
+      new: true,
+      runValidators: true,
+    }).populate("authId"),
+
+    Auth.findByIdAndUpdate(
+      admin.authId,
+      {
+        ...(payload.name && { name: payload.name }),
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ),
+  ]);
+
+  return updatedAdmin;
 };
 
 const deleteAdmin = async (userData, payload) => {
