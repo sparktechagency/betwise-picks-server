@@ -27,6 +27,10 @@ const privacySchema = new mongoose.Schema(
 
 const faqSchema = new mongoose.Schema(
   {
+    question: {
+      type: String,
+      required: true,
+    },
     description: {
       type: String,
       required: true,
