@@ -24,7 +24,7 @@ const postSchema = new Schema(
       type: Number,
       required: true,
     },
-    TargetUser: {
+    targetUser: {
       type: String,
       required: true,
       enum: {
