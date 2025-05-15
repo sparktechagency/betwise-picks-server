@@ -33,7 +33,7 @@ const getAllPosts = catchAsync(async (req, res) => {
 });
 
 const updatePost = catchAsync(async (req, res) => {
-  const result = await PostService.updatePost(req.user, req.body);
+  const result = await PostService.updatePost(req);
   sendResponse(res, {
     statusCode: 200,
     success: true,

@@ -22,6 +22,7 @@ router
   .patch(
     "/update-post",
     auth(config.auth_level.admin),
+    uploadFile(),
     PostController.updatePost
   )
   .delete(
