@@ -72,6 +72,26 @@ const updateAdminPassword = catchAsync(async (req, res) => {
   });
 });
 
+const updateProfileImageAdmin = catchAsync(async (req, res) => {
+  const result = await AdminService.updateProfileImageAdmin(req);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Profile image updated successfully",
+    data: result,
+  });
+});
+
+const blockUnblockAdmin = catchAsync(async (req, res) => {
+  const result = await AdminService.blockUnblockAdmin(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Admin updated successfully",
+    data: result,
+  });
+});
+
 const AdminController = {
   postAdmin,
   getAdmin,
@@ -80,6 +100,8 @@ const AdminController = {
   deleteAdmin,
   getProfileAdmin,
   updateAdminPassword,
+  updateProfileImageAdmin,
+  blockUnblockAdmin,
 };
 
 module.exports = AdminController;

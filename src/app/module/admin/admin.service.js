@@ -6,6 +6,7 @@ const validateFields = require("../../../util/validateFields");
 const { EnumUserRole } = require("../../../util/enum");
 const Auth = require("../auth/Auth");
 const EmailHelpers = require("../../../util/emailHelpers");
+const unlinkFile = require("../../../util/unlinkFile");
 
 const postAdmin = async (req) => {
   const { body: payload, files } = req;
@@ -163,6 +164,55 @@ const getProfileAdmin = async (userData) => {
   return result;
 };
 
+const updateProfileImageAdmin = async (req) => {
+  const { user: userData, files } = req;
+  validateFields(files, ["profile_image"]);
+
+  const { userId, authId } = userData;
+
+  const [auth, result] = await Promise.all([
+    Auth.findById(authId),
+    Admin.findById(userId).populate("authId"),
+  ]);
+
+  if (!result || !auth) throw new ApiError(status.NOT_FOUND, "Admin not found");
+
+  if (result.profile_image) unlinkFile(result.profile_image);
+
+  const updatedAdmin = await Admin.findByIdAndUpdate(
+    userId,
+    {
+      profile_image: files.profile_image[0].path,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  return updatedAdmin;
+};
+
+const blockUnblockAdmin = async (userData, payload) => {
+  validateFields(payload, ["authId", "isBlocked"]);
+
+  const admin = await Admin.findOne({ authId: payload.authId }).lean();
+  if (!admin) throw new ApiError(status.NOT_FOUND, "Admin not found");
+
+  const updatedAdmin = await Auth.findByIdAndUpdate(
+    admin.authId,
+    {
+      isBlocked: payload.isBlocked,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  return updatedAdmin;
+};
+
 const AdminService = {
   postAdmin,
   getAdmin,
@@ -171,6 +221,8 @@ const AdminService = {
   deleteAdmin,
   getProfileAdmin,
   updateAdminPassword,
+  updateProfileImageAdmin,
+  blockUnblockAdmin,
 };
 
 module.exports = AdminService;
