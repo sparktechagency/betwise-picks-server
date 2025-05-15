@@ -3,7 +3,7 @@ const sendResponse = require("../../../util/sendResponse");
 const catchAsync = require("../../../util/catchAsync");
 
 const postPost = catchAsync(async (req, res) => {
-  const result = await PostService.postPost(req.user, req.body);
+  const result = await PostService.postPost(req);
   sendResponse(res, {
     statusCode: 201,
     success: true,
