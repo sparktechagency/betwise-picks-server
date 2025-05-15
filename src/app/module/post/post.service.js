@@ -5,7 +5,7 @@ const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 
 const postPost = async (req) => {
-  const { body: payload, files } = req;
+  const { user: userData, body: payload, files } = req;
 
   validateFields(files, ["post_image"]);
   validateFields(payload, [
@@ -28,7 +28,7 @@ const postPost = async (req) => {
     targetUser: payload.targetUser,
     oddsRange: payload.oddsRange,
     post_image: files.post_image[0].path,
-    postedBy: payload.postedBy,
+    postedBy: userData.userId,
   };
 
   const post = await Post.create(postData);
@@ -39,7 +39,9 @@ const postPost = async (req) => {
 const getPost = async (userData, query) => {
   validateFields(query, ["postId"]);
 
-  const post = await Post.findOne({ _id: query.postId }).lean();
+  const post = await Post.findOne({ _id: query.postId })
+    .populate("postedBy")
+    .lean();
 
   if (!post) throw new ApiError(status.NOT_FOUND, "Post not found");
 
@@ -47,7 +49,10 @@ const getPost = async (userData, query) => {
 };
 
 const getAllPosts = async (userData, query) => {
-  const postQuery = new QueryBuilder(Post.find({}).lean(), query)
+  const postQuery = new QueryBuilder(
+    Post.find({}).populate("postedBy").lean(),
+    query
+  )
     .search([])
     .filter()
     .sort()
