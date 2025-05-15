@@ -4,8 +4,36 @@ const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 
-const postPost = async (userData, payload) => {
-  // Add your logic here
+const postPost = async (req) => {
+  const { body: payload, files } = req;
+
+  validateFields(files, ["post_image"]);
+  validateFields(payload, [
+    "postTitle",
+    "sportType",
+    "predictionType",
+    "predictionDescription",
+    "winRate",
+    "targetUser",
+    "oddsRange",
+    "postedBy",
+  ]);
+
+  const postData = {
+    postTitle: payload.postTitle,
+    sportType: payload.sportType,
+    predictionType: payload.predictionType,
+    predictionDescription: payload.predictionDescription,
+    winRate: payload.winRate,
+    targetUser: payload.targetUser,
+    oddsRange: payload.oddsRange,
+    post_image: files.post_image[0].path,
+    postedBy: payload.postedBy,
+  };
+
+  const post = await Post.create(postData);
+
+  return post;
 };
 
 const getPost = async (userData, query) => {

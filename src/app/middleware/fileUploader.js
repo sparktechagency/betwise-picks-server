@@ -35,12 +35,7 @@ const uploadFile = () => {
   });
 
   const fileFilter = (req, file, cb) => {
-    const allowedFieldNames = [
-      "profile_image",
-      "2_profile_image",
-      "3_profile_image",
-      "4_profile_image",
-    ];
+    const allowedFieldNames = ["profile_image", "post_image"];
 
     // Allow requests without files (when there's no fieldname)
     if (!file.fieldname) return cb(null, true);
@@ -59,9 +54,7 @@ const uploadFile = () => {
     fileFilter: fileFilter,
   }).fields([
     { name: "profile_image", maxCount: 1 },
-    { name: "2_profile_image", maxCount: 1 },
-    { name: "3_profile_image", maxCount: 1 },
-    { name: "4_profile_image", maxCount: 1 },
+    { name: "post_image", maxCount: 1 },
   ]);
 
   return upload;
