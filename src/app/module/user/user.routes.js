@@ -18,6 +18,17 @@ router
     "/delete-account",
     auth(config.auth_level.user),
     UserController.deleteMyAccount
+  )
+  .get("/get-user", auth(config.auth_level.admin), UserController.getUser)
+  .get(
+    "/get-all-users",
+    auth(config.auth_level.admin),
+    UserController.getAllUsers
+  )
+  .patch(
+    "/update-block-unblock-user",
+    auth(config.auth_level.admin),
+    UserController.updateBlockUnblockUser
   );
 
 module.exports = router;
