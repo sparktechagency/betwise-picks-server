@@ -1,5 +1,4 @@
 const { default: status } = require("http-status");
-const { revenue } = require("./dashboard.controller");
 
 const getRevenue = async (query) => {
   const { year: strYear } = query;
