@@ -23,6 +23,18 @@ router
     "/get-growth",
     auth(config.auth_level.admin),
     DashboardController.getGrowth
+  )
+  // announcement =======================================================================================================================
+  .get("/get-announcement", DashboardController.getAnnouncement)
+  .patch(
+    "/update-announcement",
+    auth(config.auth_level.admin),
+    DashboardController.updateAnnouncement
+  )
+  .patch(
+    "/update-toggle-announcement",
+    auth(config.auth_level.admin),
+    DashboardController.updateToggleAnnouncement
   );
 
 module.exports = router;
