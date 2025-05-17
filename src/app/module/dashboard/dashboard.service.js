@@ -1,4 +1,6 @@
 const { default: status } = require("http-status");
+const Announcement = require("./Announcement");
+const validateFields = require("../../../util/validateFields");
 
 const getRevenue = async (query) => {
   const { year: strYear } = query;
@@ -250,10 +252,54 @@ const getGrowth = async (query) => {
   };
 };
 
+// announcement ======================
+
+const getAnnouncement = async () => {
+  const announcement = await Announcement.findOne().lean();
+  return announcement;
+};
+
+const updateAnnouncement = async (payload) => {
+  const updateFields = {
+    ...(payload.title && { title: payload.title }),
+    ...(payload.description && { description: payload.description }),
+  };
+
+  if (Object.keys(updateFields).length === 0)
+    throw new ApiError(status.BAD_REQUEST, "No fields to update");
+
+  const announcement = await Announcement.findOneAndUpdate({}, updateFields, {
+    new: true,
+    upsert: true,
+    runValidators: true,
+  });
+
+  return announcement;
+};
+
+const updateToggleAnnouncement = async (payload) => {
+  validateFields(payload, ["isActive"]);
+
+  const announcement = await Announcement.findOneAndUpdate(
+    {},
+    { isActive: payload.isActive },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  return announcement;
+};
+
 const DashboardService = {
   getRevenue,
   getTotalOverview,
   getGrowth,
+
+  getAnnouncement,
+  updateAnnouncement,
+  updateToggleAnnouncement,
 };
 
 module.exports = DashboardService;
