@@ -1,19 +1,8 @@
 const catchAsync = require("../../../util/catchAsync");
 const DashboardService = require("./dashboard.service");
 
-// overview ===============================================================================================================================
-const totalOverview = catchAsync(async (req, res) => {
-  const result = await DashboardService.totalOverview();
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Total overview retrieved successfully",
-    data: result,
-  });
-});
-
-const revenue = catchAsync(async (req, res) => {
-  const result = await DashboardService.revenue(req.query);
+const getRevenue = catchAsync(async (req, res) => {
+  const result = await DashboardService.getRevenue(req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
@@ -22,63 +11,30 @@ const revenue = catchAsync(async (req, res) => {
   });
 });
 
-// admin management =======================================================================================================================
-const postAdmin = catchAsync(async (req, res) => {
-  const result = await DashboardService.postAdmin(req.user, req.body);
+const getTotalOverview = catchAsync(async (req, res) => {
+  const result = await DashboardService.getTotalOverview(req.query);
   sendResponse(res, {
-    statusCode: 201,
+    statusCode: 200,
     success: true,
-    message: "Admin created successfully",
+    message: "Total overview retrieved successfully",
     data: result,
   });
 });
 
-const getAdmin = catchAsync(async (req, res) => {
-  const result = await DashboardService.getAdmin(req.user, req.query);
+const getGrowth = catchAsync(async (req, res) => {
+  const result = await DashboardService.getGrowth(req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Admin retrieved successfully",
-    data: result,
-  });
-});
-
-const getAllAdmins = catchAsync(async (req, res) => {
-  const result = await DashboardService.getAllAdmins(req.user, req.query);
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "All admins retrieved successfully",
-    data: result,
-  });
-});
-
-const editAdmin = catchAsync(async (req, res) => {
-  const result = await DashboardService.editAdmin(req.user, req.body);
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Admin updated successfully",
-    data: result,
-  });
-});
-
-const blockUnblockAdmin = catchAsync(async (req, res) => {
-  const result = await DashboardService.blockUnblockAdmin(req.user, req.body);
-  sendResponse(res, {
-    statusCode: 200,
-    success: true,
-    message: "Admin blocked/unblocked successfully",
+    message: "Growth retrieved successfully",
     data: result,
   });
 });
 
 const DashboardController = {
-  postAdmin,
-  getAdmin,
-  getAllAdmins,
-  editAdmin,
-  blockUnblockAdmin,
+  getRevenue,
+  getTotalOverview,
+  getGrowth,
 };
 
 module.exports = DashboardController;

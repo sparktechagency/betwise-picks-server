@@ -3,6 +3,7 @@ const Post = require("./Post");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
+const unlinkFile = require("../../../util/unlinkFile");
 
 const postPost = async (req) => {
   const { user: userData, body: payload, files } = req;
@@ -70,8 +71,40 @@ const getAllPosts = async (userData, query) => {
   };
 };
 
-const updatePost = async (userData, payload) => {
-  // Add your logic here
+const updatePost = async (req) => {
+  const { body: payload, files } = req;
+
+  validateFields(payload, ["postId"]);
+
+  const updateData = {
+    ...(payload.postTitle && { postTitle: payload.postTitle }),
+    ...(payload.sportType && { sportType: payload.sportType }),
+    ...(payload.predictionType && { predictionType: payload.predictionType }),
+    ...(payload.predictionDescription && {
+      predictionDescription: payload.predictionDescription,
+    }),
+    ...(payload.winRate && { winRate: payload.winRate }),
+    ...(payload.targetUser && { targetUser: payload.targetUser }),
+    ...(payload.oddsRange && { oddsRange: payload.oddsRange }),
+    ...(files.post_image && { post_image: files.post_image[0].path }),
+  };
+
+  if (files.post_image && files.post_image[0]) {
+    const post = await Post.findById(payload.postId).lean();
+
+    if (!post) throw new ApiError(status.NOT_FOUND, "Post not found");
+
+    unlinkFile(post.post_image);
+  }
+
+  const post = await Post.findByIdAndUpdate(payload.postId, updateData, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!post) throw new ApiError(status.NOT_FOUND, "Post not found");
+
+  return post;
 };
 
 const deletePost = async (userData, payload) => {

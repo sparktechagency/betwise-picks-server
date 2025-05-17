@@ -31,10 +31,43 @@ const deleteMyAccount = catchAsync(async (req, res) => {
   });
 });
 
+const getUser = catchAsync(async (req, res) => {
+  const result = await UserService.getUser(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User retrieved successfully",
+    data: result,
+  });
+});
+
+const updateBlockUnblockUser = catchAsync(async (req, res) => {
+  const result = await UserService.updateBlockUnblockUser(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "User updated successfully",
+    data: result,
+  });
+});
+
+const getAllUsers = catchAsync(async (req, res) => {
+  const result = await UserService.getAllUsers(req.user, req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Users retrieved successfully",
+    data: result,
+  });
+});
+
 const UserController = {
   deleteMyAccount,
   getProfile,
   updateProfile,
+  getUser,
+  updateBlockUnblockUser,
+  getAllUsers,
 };
 
 module.exports = { UserController };

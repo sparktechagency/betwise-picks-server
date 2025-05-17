@@ -4,6 +4,8 @@ const ApiError = require("../../../error/ApiError");
 const User = require("./User");
 const Auth = require("../auth/Auth");
 const unlinkFile = require("../../../util/unlinkFile");
+const validateFields = require("../../../util/validateFields");
+const QueryBuilder = require("../../../builder/queryBuilder");
 
 const updateProfile = async (req) => {
   const { files, body: data } = req;
@@ -75,10 +77,63 @@ const deleteMyAccount = async (payload) => {
   ]);
 };
 
+const getUser = async (query) => {
+  validateFields(query, ["userId"]);
+
+  const user = await User.findOne({ _id: query.userId })
+    .populate("authId")
+    .lean();
+
+  if (!user) throw new ApiError(status.NOT_FOUND, "User not found");
+
+  return user;
+};
+
+const getAllUsers = async (userData, query) => {
+  const userQuery = new QueryBuilder(
+    User.find({}).populate("authId").lean(),
+    query
+  )
+    .search(["email", "name"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const [users, meta] = await Promise.all([
+    userQuery.modelQuery,
+    userQuery.countTotal(),
+  ]);
+
+  return {
+    meta,
+    users,
+  };
+};
+
+const updateBlockUnblockUser = async (userData, payload) => {
+  validateFields(payload, ["authId", "isBlocked"]);
+  const { authId, isBlocked } = payload;
+
+  const user = await Auth.findByIdAndUpdate(
+    authId,
+    { isBlocked },
+    { new: true, runValidators: true }
+  );
+
+  if (!user) throw new ApiError(status.NOT_FOUND, "User not found");
+
+  return user;
+};
+
 const UserService = {
   getProfile,
   deleteMyAccount,
   updateProfile,
+
+  getUser,
+  getAllUsers,
+  updateBlockUnblockUser,
 };
 
 module.exports = { UserService };
