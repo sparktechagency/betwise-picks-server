@@ -1,0 +1,71 @@
+const { default: status } = require("http-status");
+const SubscriptionPlan = require("./SubscriptionPlan");
+const QueryBuilder = require("../../../builder/queryBuilder");
+const ApiError = require("../../../error/ApiError");
+const validateFields = require("../../../util/validateFields");
+
+const postSubscriptionPlan = async (userData, payload) => {
+  // Add your logic here
+};
+
+const getSubscriptionPlan = async (userData, query) => {
+  validateFields(query, ["subscriptionPlanId"]);
+
+  const subscriptionPlan = await SubscriptionPlan.findOne({
+    _id: query.subscriptionPlanId,
+  }).lean();
+
+  if (!subscriptionPlan)
+    throw new ApiError(status.NOT_FOUND, "SubscriptionPlan not found");
+
+  return subscriptionPlan;
+};
+
+const getAllSubscriptionPlans = async (userData, query) => {
+  const subscriptionPlanQuery = new QueryBuilder(
+    SubscriptionPlan.find({}).lean(),
+    query
+  )
+    .search([])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const [subscriptionPlans, meta] = await Promise.all([
+    subscriptionPlanQuery.modelQuery,
+    subscriptionPlanQuery.countTotal(),
+  ]);
+
+  return {
+    meta,
+    subscriptionPlans,
+  };
+};
+
+const updateSubscriptionPlan = async (userData, payload) => {
+  // Add your logic here
+};
+
+const deleteSubscriptionPlan = async (userData, payload) => {
+  validateFields(payload, ["subscriptionPlanId"]);
+
+  const subscriptionPlan = await SubscriptionPlan.deleteOne({
+    _id: payload.subscriptionPlanId,
+  });
+
+  if (!subscriptionPlan.deletedCount)
+    throw new ApiError(status.NOT_FOUND, "SubscriptionPlan not found");
+
+  return subscriptionPlan;
+};
+
+const SubscriptionPlanService = {
+  postSubscriptionPlan,
+  getSubscriptionPlan,
+  getAllSubscriptionPlans,
+  updateSubscriptionPlan,
+  deleteSubscriptionPlan,
+};
+
+module.exports = SubscriptionPlanService;
