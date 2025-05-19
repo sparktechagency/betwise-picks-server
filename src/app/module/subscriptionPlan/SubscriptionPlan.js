@@ -1,5 +1,8 @@
 const { Schema, model } = require("mongoose");
-const { EnumSubscriptionPlan } = require("../../../util/enum");
+const {
+  EnumSubscriptionPlan,
+  EnumSubscriptionPlanDuration,
+} = require("../../../util/enum");
 
 const subscriptionPlanSchema = new Schema(
   {
@@ -28,6 +31,15 @@ const subscriptionPlanSchema = new Schema(
     duration: {
       type: String,
       required: true,
+      enum: {
+        values: [
+          EnumSubscriptionPlanDuration.MONTHLY,
+          EnumSubscriptionPlanDuration.YEARLY,
+        ],
+        message: `Invalid subscription duration. Allowed values: ${Object.values(
+          EnumSubscriptionPlanDuration
+        ).join(", ")}`,
+      },
     },
   },
   {

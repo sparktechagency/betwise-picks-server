@@ -61,7 +61,23 @@ const getAllSubscriptionPlans = async (userData, query) => {
 };
 
 const updateSubscriptionPlan = async (userData, payload) => {
-  // Add your logic here
+  validateFields(payload, ["subscriptionPlanId"]);
+
+  const updateData = {
+    ...(payload.features && { features: payload.features }),
+    ...(payload.price && { price: payload.price }),
+    ...(payload.duration && { duration: payload.duration }),
+  };
+
+  const subscriptionPlan = await SubscriptionPlan.findOneAndUpdate(
+    { _id: payload.subscriptionPlanId },
+    updateData,
+    { new: true, runValidators: true }
+  ).lean();
+
+  if (!subscriptionPlan)
+    throw new ApiError(status.NOT_FOUND, "SubscriptionPlan not found");
+  return subscriptionPlan;
 };
 
 const deleteSubscriptionPlan = async (userData, payload) => {
