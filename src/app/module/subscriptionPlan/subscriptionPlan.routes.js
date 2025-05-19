@@ -24,7 +24,7 @@ router
   .patch(
     "/update-subscriptionPlan",
     auth(config.auth_level.user),
-    SubscriptionPlanController.updateSubscriptionPlans
+    SubscriptionPlanController.updateSubscriptionPlan
   )
   .delete(
     "/delete-subscriptionPlan",

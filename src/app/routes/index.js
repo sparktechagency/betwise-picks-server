@@ -10,6 +10,7 @@ const NotificationRoutes = require("../module/notification/notification.routes")
 const FeedbackRoutes = require("../module/feedback/feedback.routes");
 const ReviewRoutes = require("../module/review/review.routes");
 const PostRoutes = require("../module/post/post.routes");
+const SubscriptionPlanRoutes = require("../module/subscriptionPlan/subscriptionPlan.routes");
 
 const moduleRoutes = [
   {
@@ -51,6 +52,10 @@ const moduleRoutes = [
   {
     path: "/post",
     route: PostRoutes,
+  },
+  {
+    path: "/subscription-plan",
+    route: SubscriptionPlanRoutes,
   },
 ];
 

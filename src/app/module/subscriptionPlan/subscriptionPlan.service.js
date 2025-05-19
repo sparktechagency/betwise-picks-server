@@ -5,7 +5,24 @@ const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 
 const postSubscriptionPlan = async (userData, payload) => {
-  // Add your logic here
+  validateFields(payload, [
+    "subscriptionType",
+    "features",
+    "price",
+    "duration",
+  ]);
+
+  const subscriptionPlanData = {
+    subscriptionType: payload.subscriptionType,
+    features: payload.features,
+    price: payload.price,
+    duration: payload.duration,
+  };
+
+  const newSubscriptionPlan = await SubscriptionPlan.create(
+    subscriptionPlanData
+  );
+  return newSubscriptionPlan;
 };
 
 const getSubscriptionPlan = async (userData, query) => {
