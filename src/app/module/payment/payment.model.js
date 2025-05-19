@@ -1,4 +1,5 @@
 const { Schema, model } = require("mongoose");
+const { EnumPaymentStatus } = require("../../../util/enum");
 const ObjectId = Schema.Types.ObjectId;
 
 const paymentSchema = new Schema(
@@ -11,10 +12,6 @@ const paymentSchema = new Schema(
       type: Number,
       required: true,
     },
-    currency: {
-      type: String,
-      required: true,
-    },
     checkout_session_id: {
       type: String,
       unique: true,
@@ -25,8 +22,17 @@ const paymentSchema = new Schema(
     },
     status: {
       type: String,
-      enum: ["unpaid", "succeeded", "refunded", "transferred"],
       default: "unpaid",
+      enum: {
+        values: [EnumPaymentStatus.UNPAID, EnumPaymentStatus.SUCCEEDED],
+        message: `Invalid payment status. Allowed values: ${Object.values(
+          EnumPaymentStatus
+        ).join(", ")}`,
+      },
+    },
+    subscriptionPlan: {
+      type: ObjectId,
+      ref: "SubscriptionPlan",
     },
   },
   {
