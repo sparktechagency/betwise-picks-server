@@ -5,6 +5,7 @@ const resetPassEmailTemp = require("../mail/resetPassEmailTemp");
 const signUpEmailTemp = require("../mail/signUpEmailTemp");
 const { sendEmail } = require("../util/sendEmail");
 const addAdminEmailTemp = require("../mail/addAdminEmailTemp");
+const bookingEmailTemp = require("../mail/bookingEmailTemp");
 
 const sendActivationEmail = async (email, data) => {
   try {
@@ -58,11 +59,25 @@ const sendAddAdminEmailTemp = async (email, data) => {
   }
 };
 
+const sendSubscriptionEmail = async (email, data) => {
+  try {
+    await sendEmail({
+      email,
+      subject: "BetWise Picks Subscription",
+      html: bookingEmailTemp(data),
+    });
+  } catch (error) {
+    console.log(error);
+    throw new ApiError(status.INTERNAL_SERVER_ERROR, error.message);
+  }
+};
+
 const EmailHelpers = {
   sendActivationEmail,
   sendOtpResendEmail,
   sendResetPasswordEmail,
   sendAddAdminEmailTemp,
+  sendSubscriptionEmail,
 };
 
 module.exports = EmailHelpers;
