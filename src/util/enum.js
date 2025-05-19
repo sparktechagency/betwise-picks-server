@@ -33,10 +33,16 @@ const EnumSubscriptionPlan = {
   GOLD: "gold",
 };
 
+const EnumSubscriptionPlanDuration = {
+  MONTHLY: "monthly",
+  YEARLY: "yearly",
+};
+
 module.exports = {
   EnumUserRole,
   EnumPaymentStatus,
   EnumSocketEvent,
   EnumUserAccountStatus,
   EnumSubscriptionPlan,
+  EnumSubscriptionPlanDuration,
 };
