@@ -11,6 +11,7 @@ const FeedbackRoutes = require("../module/feedback/feedback.routes");
 const ReviewRoutes = require("../module/review/review.routes");
 const PostRoutes = require("../module/post/post.routes");
 const SubscriptionPlanRoutes = require("../module/subscriptionPlan/subscriptionPlan.routes");
+const PaymentRoutes = require("../module/payment/payment.routes");
 
 const moduleRoutes = [
   {
@@ -56,6 +57,10 @@ const moduleRoutes = [
   {
     path: "/subscription-plan",
     route: SubscriptionPlanRoutes,
+  },
+  {
+    path: "/payment",
+    route: PaymentRoutes,
   },
 ];
 

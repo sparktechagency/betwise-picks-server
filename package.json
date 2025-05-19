@@ -39,7 +39,7 @@
     "nodemailer": "^6.9.16",
     "socket.io": "^4.8.1",
     "stream": "^0.0.3",
-    "stripe": "^17.4.0",
+    "stripe": "^17.7.0",
     "validator": "^13.12.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"

@@ -2,7 +2,7 @@ const { status } = require("http-status");
 
 const ApiError = require("../../../error/ApiError");
 const QueryBuilder = require("../../../builder/queryBuilder");
-const Payment = require("./payment.model");
+const Payment = require("./Payment");
 
 const getAllPayment = async (query) => {
   const paymentQuery = new QueryBuilder(
