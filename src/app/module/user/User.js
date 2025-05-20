@@ -39,6 +39,12 @@ const UserSchema = new Schema(
       type: ObjectId,
       ref: "SubscriptionPlan",
     },
+    subscriptionStartDate: {
+      type: Date,
+    },
+    subscriptionEndDate: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

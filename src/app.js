@@ -6,6 +6,7 @@ const NotFoundHandler = require("./error/NotFoundHandler");
 const cookieParser = require("cookie-parser");
 const corsOptions = require("./util/corsOptions");
 const path = require("path");
+const webhookRoutes = require("./app/module/payment/webhook.routes");
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
 app.use(cors(corsOptions));
+app.use("/stripe/webhook", webhookRoutes);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
