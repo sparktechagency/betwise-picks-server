@@ -2,91 +2,46 @@ const { default: status } = require("http-status");
 const cron = require("node-cron");
 const config = require("../../../config");
 const ApiError = require("../../../error/ApiError");
-const { errorLogger } = require("../../../shared/logger");
 const validateFields = require("../../../util/validateFields");
-const {
-  ENUM_BUSINESS_TYPE,
-  ENUM_PAYMENT_STATUS,
-} = require("../../../util/enum");
-const Payment = require("./payment.model");
+const Payment = require("./Payment");
 const EmailHelpers = require("../../../util/emailHelpers");
-const catchAsync = require("../../../shared/catchAsync");
 const { response } = require("express");
+const { logger, errorLogger } = require("../../../util/logger");
+const catchAsync = require("../../../util/catchAsync");
+const SubscriptionPlan = require("../subscriptionPlan/SubscriptionPlan");
+const {
+  EnumPaymentStatus,
+  EnumSubscriptionPlanDuration,
+  EnumSubscriptionStatus,
+} = require("../../../util/enum");
+const User = require("../user/User");
+const postNotification = require("../../../util/postNotification");
 
-const stripe = require("stripe")(config.stripe.secret_key);
-const endPointSecret = config.stripe.end_point_secret;
+const stripe = require("stripe")(config.stripe.stripe_secret_key);
+const endPointSecret = config.stripe.stripe_webhook_secret_test;
+// const endPointSecret = config.stripe.stripe_webhook_secret_production;
 
-const createCheckout = async (userData, payload) => {
-  /**
-   * Creates a Stripe checkout session for booking payments.
-   *
-   * This function is responsible for processing payments when a user books an event or track slot.
-   * It validates the provided booking details, calculates the necessary fees, and creates a Stripe
-   * checkout session with the appropriate payment details.
-   *
-   * Functionality:
-   * - Validates required fields in the payload.
-   * - Ensures only one of `bookingId` or `bookingIds` is provided.
-   * - Retrieves the booking details and verifies its existence.
-   * - Fetches payout information and validates the associated business (event or track).
-   * - Calculates platform fees, Stripe fees, and the final payable amount.
-   * - Creates a Stripe checkout session with relevant payment details and payout information.
-   * - Saves payment details in the database.
-   * - Returns the Stripe checkout session URL for the frontend to redirect the user for payment.
-   *
-   * Usage:
-   * - This function is triggered when a user attempts to pay for a booking.
-   * - It ensures the correct amount is charged, platform fees are deducted, and the host receives
-   *   their share of the payment.
-   * - Provides a secure and structured payment flow via Stripe.
-   */
+const postCheckout = async (userData, payload) => {
+  validateFields(payload, ["subscriptionId"]);
 
-  validateFields(payload, ["amount", "currency"]);
+  // check if user is already subscribed
+  // const user = await User.findById(userData.userId).lean();
 
-  const { userId } = userData;
-  const {
-    bookingId: singleBookingId,
-    bookingIds,
-    amount: prevAmount,
-  } = payload || {};
+  // if (user.isSubscribed)
+  //   throw new ApiError(status.BAD_REQUEST, "User is already subscribed");
 
-  if (!singleBookingId && !bookingIds)
-    throw new ApiError(status.BAD_REQUEST, "Missing bookingId or bookingIds");
-  if (singleBookingId && bookingIds)
-    throw new ApiError(status.BAD_REQUEST, "Only one: bookingId or bookingIds");
+  const subscriptionPlan = await SubscriptionPlan.findById(
+    payload.subscriptionId
+  ).lean();
 
-  const bookingId = singleBookingId ? singleBookingId : bookingIds[0];
+  if (!subscriptionPlan)
+    throw new ApiError(status.NOT_FOUND, "SubscriptionPlan not found");
 
-  const amountInCents = Number(prevAmount) * 100;
   let session = {};
-
-  // const currency = currencyValidator(payload.currency);
-
-  // validate booking
-  const booking = await Booking.findById(bookingId)
-    .select("user host event eventSlot track trackSlot currency")
-    .lean();
-
-  if (!booking) throw new ApiError(status.NOT_FOUND, "Booking not found");
-
-  // validate payoutInfo and business
-  const isEventBooking = Boolean(booking.event);
-  const Model = isEventBooking ? Event : Track;
-  const businessId = isEventBooking ? booking.event : booking.track;
-  let [payoutInfo, business] = await Promise.all([
-    PayoutInfo.findOne({ host: booking.host }),
-    Model.findById(businessId).select("_id").lean(),
-  ]);
-
-  if (!payoutInfo) throw new ApiError(status.NOT_FOUND, "PayoutInfo not found");
-  if (!business) throw new ApiError(status.NOT_FOUND, "Booking not found");
-
-  const platformFee = amountInCents * 0.05;
-  const payableAmount = amountInCents + platformFee;
-  const stripeFee = payableAmount * 0.029;
-  const halfOfStripeFee = stripeFee / 2;
-  const platformAmount = platformFee - halfOfStripeFee;
-  const hostAmount = amountInCents - halfOfStripeFee;
+  const amountInCents = Math.ceil(
+    Number(subscriptionPlan.price).toFixed(2) * 100
+  );
+  const amount = amountInCents / 100;
 
   const sessionData = {
     payment_method_types: ["card"],
@@ -96,25 +51,15 @@ const createCheckout = async (userData, payload) => {
     line_items: [
       {
         price_data: {
-          currency: payload.currency,
+          currency: "usd",
           product_data: {
-            name: "Amount",
-            description: `Platform Fee: ${platformFee / 100} ${
-              payload.currency
-            }`,
+            name: "Subscription Fee",
           },
-          unit_amount: Math.round(payableAmount),
+          unit_amount: amountInCents,
         },
         quantity: 1,
       },
     ],
-    payment_intent_data: {
-      application_fee_amount: Math.round(platformAmount),
-      transfer_data: {
-        destination: payoutInfo.stripe_account_id,
-      },
-      on_behalf_of: payoutInfo.stripe_account_id,
-    },
   };
 
   try {
@@ -128,28 +73,12 @@ const createCheckout = async (userData, payload) => {
   const { id: checkout_session_id, url } = session || {};
 
   const paymentData = {
-    ...(isEventBooking && {
-      event: businessId,
-      eventSlot: booking.eventSlot,
-      businessType: ENUM_BUSINESS_TYPE.EVENT,
-    }),
-    ...(!isEventBooking && {
-      bookingId: singleBookingId,
-      track: businessId,
-      trackSlot: booking.trackSlot,
-      businessType: ENUM_BUSINESS_TYPE.TRACK,
-    }),
-    user: userId,
-    host: booking.host,
-    amount: prevAmount,
-    currency: payload.currency,
+    user: userData.userId,
+    amount,
     checkout_session_id,
+    subscriptionPlan: subscriptionPlan._id,
+    status: EnumPaymentStatus.UNPAID,
   };
-
-  if (isEventBooking && payload.bookingId)
-    paymentData.bookingId = payload.bookingId;
-  if (isEventBooking && payload.bookingIds)
-    paymentData.bookingIds = payload.bookingIds;
 
   const payment = await Payment.create(paymentData);
 
@@ -158,7 +87,7 @@ const createCheckout = async (userData, payload) => {
 
 const webhookManager = async (req) => {
   const sig = req.headers["stripe-signature"];
-  console.log("Content-Type:", req.headers["content-type"]);
+  // console.log("Content-Type:", req.headers["content-type"]);
 
   let event;
   const date = new Date();
@@ -187,47 +116,145 @@ const webhookManager = async (req) => {
 };
 
 // ** utility function
+
 const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
   try {
-    const { id, payment_intent } = webhookEventData;
-    const emailData = {
-      name: updatedBooking.user.name,
-      subscriptionPlan: updatedBooking.subscriptionPlan,
-      price: updatedBooking.price,
-      currency: updatedBooking.currency,
-      startDate: updatedBooking.startDate,
-      endDate: updatedBooking.endDate,
-      payment_intent_id: payment_intent_id,
+    const { id: checkout_session_id, payment_intent } = webhookEventData;
+
+    // update payment
+    const payment = await Payment.findOneAndUpdate(
+      { checkout_session_id: checkout_session_id },
+      {
+        $set: {
+          payment_intent_id: payment_intent,
+          status: EnumPaymentStatus.SUCCEEDED,
+          subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
+        },
+      },
+      { new: true, runValidators: true }
+    ).populate([
+      {
+        path: "subscriptionPlan",
+        select: "subscriptionType price duration",
+      },
+    ]);
+
+    // update user subscription
+    // calculate and stamp subscriptionStartDate and subscriptionEndDate date based on the duration
+    const subscriptionStartDate = new Date();
+    const subscriptionEndDate =
+      payment.subscriptionPlan.duration === EnumSubscriptionPlanDuration.MONTHLY
+        ? new Date(new Date().setMonth(new Date().getMonth() + 1)) //  first day of next month
+        : new Date(new Date().setFullYear(new Date().getFullYear() + 1)); // first day of next year
+
+    const updateUserData = {
+      $set: {
+        isSubscribed: true,
+        subscriptionPlan: payment.subscriptionPlan,
+        subscriptionStartDate,
+        subscriptionEndDate,
+      },
     };
 
-    EmailHelpers.sendBookingEmail(updatedBooking.user.email, emailData);
+    const updatedUser = await User.findByIdAndUpdate(
+      payment.user,
+      updateUserData,
+      { new: true, runValidators: true }
+    );
+
+    // send email to user
+    const emailData = {
+      name: updatedUser.name,
+      subscriptionPlan: payment.subscriptionPlan.subscriptionType,
+      price: payment.amount,
+      currency: "USD",
+      startDate: subscriptionStartDate,
+      endDate: subscriptionEndDate,
+      payment_intent_id: payment_intent,
+    };
+
+    EmailHelpers.sendSubscriptionEmail(updatedUser.email, emailData);
+
+    // send notification
+    postNotification(
+      "Subscription Success",
+      "Your subscription has been successfully updated.",
+      updatedUser._id
+    );
+
+    postNotification(
+      "New Subscriber",
+      "BetWise Picks got a new subscriber. Check it out!"
+    );
   } catch (error) {
     console.log(error);
     errorLogger.error(error.message);
   }
 };
 
-// Delete unpaid payments and bookings every day at midnight
-cron.schedule(
-  "0 0 * * *",
-  catchAsync(async () => {
-    const [paymentDeletionResult] = await Promise.all([
-      Payment.deleteMany({
-        status: ENUM_PAYMENT_STATUS.UNPAID,
-      }),
-    ]);
+// Delete unpaid payments
+const deleteUnpaidPayments = catchAsync(async () => {
+  const paymentDeletionResult = await Payment.deleteMany({
+    status: EnumPaymentStatus.UNPAID,
+  });
 
-    if (paymentDeletionResult.deletedCount > 0) {
-      logger.info(
-        `Deleted ${paymentDeletionResult.deletedCount} unpaid payments`
-      );
+  if (paymentDeletionResult.deletedCount > 0) {
+    logger.info(
+      `Deleted ${paymentDeletionResult.deletedCount} unpaid payments`
+    );
+  }
+});
+
+// Update expired subscriptions
+const updateExpiredSubscriptions = catchAsync(async () => {
+  const expiredSubscriptions = await Payment.find({
+    subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
+    subscriptionEndDate: { $lt: new Date() },
+  });
+
+  if (expiredSubscriptions.length > 0) {
+    logger.info(`Updated ${expiredSubscriptions.length} expired subscriptions`);
+  }
+});
+
+// update user subscription status
+const updateUserSubscriptionStatus = catchAsync(async () => {
+  const updatedUser = await User.updateMany(
+    {
+      subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
+      subscriptionEndDate: { $lt: new Date() },
+    },
+    {
+      $set: {
+        isSubscribed: false,
+        subscriptionPlan: null,
+        subscriptionStartDate: null,
+        subscriptionEndDate: null,
+      },
     }
-  })
-);
+  );
+
+  // send an email notification to user
+  const emailData = {
+    name: updatedUser.name,
+  };
+
+  EmailHelpers.sendSubscriptionExpiredEmail(updatedUser.email, emailData);
+
+  if (updatedUser.modifiedCount > 0) {
+    logger.info(`Updated ${updatedUser.modifiedCount} expired subscriptions`);
+  }
+});
+
+// Run cron job every day at midnight
+cron.schedule("0 0 * * *", () => {
+  deleteUnpaidPayments();
+  updateExpiredSubscriptions();
+  updateUserSubscriptionStatus();
+});
 
 const StripeService = {
-  onboarding,
-  createCheckout,
+  postCheckout,
   webhookManager,
 };
 

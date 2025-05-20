@@ -54,7 +54,7 @@ const getAllPosts = async (userData, query) => {
     Post.find({}).populate("postedBy").lean(),
     query
   )
-    .search([])
+    .search(["postTitle", "predictionDescription", "predictionType"])
     .filter()
     .sort()
     .paginate()
@@ -68,6 +68,44 @@ const getAllPosts = async (userData, query) => {
   return {
     meta,
     posts,
+  };
+};
+
+// get all unique sport types from database
+const getAllUniqueTypes = async () => {
+  const result = await Post.aggregate([
+    {
+      $group: {
+        _id: null,
+        sportTypes: { $addToSet: "$sportType" },
+        predictionTypes: { $addToSet: "$predictionType" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        sportTypes: 1,
+        predictionTypes: 1,
+      },
+    },
+    {
+      $set: {
+        sportTypes: { $sortArray: { input: "$sportTypes", sortBy: 1 } },
+        predictionTypes: {
+          $sortArray: { input: "$predictionTypes", sortBy: 1 },
+        },
+      },
+    },
+  ]);
+
+  const resultObject = result[0] || {
+    sportTypes: [],
+    predictionTypes: [],
+  };
+
+  return {
+    sportTypes: resultObject.sportTypes,
+    predictionTypes: resultObject.predictionTypes,
   };
 };
 
@@ -122,6 +160,7 @@ const PostService = {
   postPost,
   getPost,
   getAllPosts,
+  getAllUniqueTypes,
   updatePost,
   deletePost,
 };

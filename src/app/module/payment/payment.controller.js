@@ -1,7 +1,7 @@
-const sendResponse = require("../../../shared/sendResponse");
-const catchAsync = require("../../../shared/catchAsync");
 const StripeService = require("./stripe.service");
 const { PaymentService } = require("./payment.service");
+const sendResponse = require("../../../util/sendResponse");
+const catchAsync = require("../../../util/catchAsync");
 
 const successPage = catchAsync(async (req, res) => {
   res.render("success.ejs");
@@ -41,7 +41,7 @@ const getSinglePayment = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Payment info retrieved",
+    message: "Payment retrieved",
     data: result,
   });
 });
@@ -49,7 +49,6 @@ const getSinglePayment = catchAsync(async (req, res) => {
 const PaymentController = {
   successPage,
   cancelPage,
-  returnPage,
   postCheckout,
   webhookManager,
   getAllPayment,

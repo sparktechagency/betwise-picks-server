@@ -38,6 +38,11 @@ const EnumSubscriptionPlanDuration = {
   YEARLY: "yearly",
 };
 
+const EnumSubscriptionStatus = {
+  ACTIVE: "active",
+  EXPIRED: "expired",
+};
+
 module.exports = {
   EnumUserRole,
   EnumPaymentStatus,
@@ -45,4 +50,5 @@ module.exports = {
   EnumUserAccountStatus,
   EnumSubscriptionPlan,
   EnumSubscriptionPlanDuration,
+  EnumSubscriptionStatus,
 };

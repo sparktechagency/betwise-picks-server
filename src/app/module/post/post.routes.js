@@ -19,6 +19,11 @@ router
     auth(config.auth_level.user),
     PostController.getAllPosts
   )
+  .get(
+    "/get-all-unique-types",
+    auth(config.auth_level.user),
+    PostController.getAllUniqueTypes
+  )
   .patch(
     "/update-post",
     auth(config.auth_level.admin),

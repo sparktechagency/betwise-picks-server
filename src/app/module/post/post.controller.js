@@ -32,6 +32,16 @@ const getAllPosts = catchAsync(async (req, res) => {
   });
 });
 
+const getAllUniqueTypes = catchAsync(async (req, res) => {
+  const result = await PostService.getAllUniqueTypes();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Unique types retrieved",
+    data: result,
+  });
+});
+
 const updatePost = catchAsync(async (req, res) => {
   const result = await PostService.updatePost(req);
   sendResponse(res, {
@@ -56,6 +66,7 @@ const PostController = {
   postPost,
   getPost,
   getAllPosts,
+  getAllUniqueTypes,
   updatePost,
   deletePost,
 };

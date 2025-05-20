@@ -46,6 +46,9 @@ const config = {
   },
   stripe: {
     stripe_secret_key: process.env.STRIPE_SECRET_KEY,
+    stripe_webhook_secret_test: process.env.STRIPE_WEBHOOK_SECRET_TEST,
+    stripe_webhook_secret_production:
+      process.env.STRIPE_WEBHOOK_SECRET_PRODUCTION,
   },
   variables: {
     email_temp_image: process.env.EMAIL_TEMP_IMAGE,
