@@ -9,33 +9,21 @@ const validateFields = require("../../../util/validateFields");
 const { EnumUserRole } = require("../../../util/enum");
 
 const postFeedback = async (userData, payload) => {
-  validateFields(payload, ["feedback"]);
-  let user;
-
-  if (!userData) validateFields(payload, ["name", "email"]);
-  else user = await User.findById(userData.userId).lean();
+  validateFields(payload, ["feedback", "subject"]);
 
   const feedbackData = {
-    ...(userData && {
-      user: userData.userId,
-      name: user.name,
-      email: user.email,
-    }),
-    ...(!userData && {
-      name: payload.name,
-      email: payload.email,
-    }),
+    user: userData.userId,
+    subject: payload.subject,
     feedback: payload.feedback,
   };
 
   const feedback = await Feedback.create(feedbackData);
 
-  if (userData)
-    postNotification(
-      "Thank You",
-      "Thank you for your valuable feedback 🫡",
-      userData.userId
-    );
+  postNotification(
+    "Thank You",
+    "Thank you for your valuable feedback 🫡",
+    userData.userId
+  );
 
   postNotification(
     "New Feedback",
@@ -89,7 +77,7 @@ const getAllFeedbacks = async (userData, query) => {
   };
 };
 
-const updateFeedbackWithReply = async (useData, payload) => {
+const updateFeedbackWithReply = async (userData, payload) => {
   validateFields(payload, ["feedbackId", "reply"]);
 
   const feedback = await Feedback.findByIdAndUpdate(

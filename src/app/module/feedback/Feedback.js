@@ -6,11 +6,7 @@ const feedbackSchema = new Schema(
       type: Types.ObjectId,
       ref: "User",
     },
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
+    subject: {
       type: String,
       required: true,
     },
