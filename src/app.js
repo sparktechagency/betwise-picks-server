@@ -5,8 +5,12 @@ const routes = require("./app/routes");
 const NotFoundHandler = require("./error/NotFoundHandler");
 const cookieParser = require("cookie-parser");
 const corsOptions = require("./util/corsOptions");
+const path = require("path");
 
 const app = express();
+
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
 
 app.use(cors(corsOptions));
 app.use(express.json());
