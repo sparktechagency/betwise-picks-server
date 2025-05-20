@@ -1,5 +1,8 @@
 const { Schema, model } = require("mongoose");
-const { EnumPaymentStatus } = require("../../../util/enum");
+const {
+  EnumPaymentStatus,
+  EnumSubscriptionStatus,
+} = require("../../../util/enum");
 const ObjectId = Schema.Types.ObjectId;
 
 const paymentSchema = new Schema(
@@ -27,6 +30,21 @@ const paymentSchema = new Schema(
         values: [EnumPaymentStatus.UNPAID, EnumPaymentStatus.SUCCEEDED],
         message: `Invalid payment status. Allowed values: ${Object.values(
           EnumPaymentStatus
+        ).join(", ")}`,
+      },
+    },
+    subscriptionStartDate: {
+      type: Date,
+    },
+    subscriptionEndDate: {
+      type: Date,
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: {
+        values: [EnumSubscriptionStatus.ACTIVE, EnumSubscriptionStatus.EXPIRED],
+        message: `Invalid subscription status. Allowed values: ${Object.values(
+          EnumSubscriptionStatus
         ).join(", ")}`,
       },
     },

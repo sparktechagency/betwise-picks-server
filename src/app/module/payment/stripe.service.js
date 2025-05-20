@@ -173,6 +173,7 @@ const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
       "Subscription Success",
       "Your subscription has been successfully updated."
     );
+
     postNotification(
       "New Subscriber",
       "BetWise Picks got a new subscriber. Check it out!"
