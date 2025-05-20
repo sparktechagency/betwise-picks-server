@@ -54,7 +54,7 @@ const getAllPosts = async (userData, query) => {
     Post.find({}).populate("postedBy").lean(),
     query
   )
-    .search([])
+    .search(["postTitle", "predictionDescription", "predictionType"])
     .filter()
     .sort()
     .paginate()

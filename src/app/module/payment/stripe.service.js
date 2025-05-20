@@ -12,6 +12,7 @@ const SubscriptionPlan = require("../subscriptionPlan/SubscriptionPlan");
 const {
   EnumPaymentStatus,
   EnumSubscriptionPlanDuration,
+  EnumSubscriptionStatus,
 } = require("../../../util/enum");
 const User = require("../user/User");
 const postNotification = require("../../../util/postNotification");
@@ -23,6 +24,12 @@ const endPointSecret = config.stripe.stripe_webhook_secret_test;
 const postCheckout = async (userData, payload) => {
   validateFields(payload, ["subscriptionId"]);
 
+  // check if user is already subscribed
+  // const user = await User.findById(userData.userId).lean();
+
+  // if (user.isSubscribed)
+  //   throw new ApiError(status.BAD_REQUEST, "User is already subscribed");
+
   const subscriptionPlan = await SubscriptionPlan.findById(
     payload.subscriptionId
   ).lean();
@@ -31,7 +38,10 @@ const postCheckout = async (userData, payload) => {
     throw new ApiError(status.NOT_FOUND, "SubscriptionPlan not found");
 
   let session = {};
-  const amount = Math.ceil(Number(subscriptionPlan.price).toFixed(2) * 100);
+  const amountInCents = Math.ceil(
+    Number(subscriptionPlan.price).toFixed(2) * 100
+  );
+  const amount = amountInCents / 100;
 
   const sessionData = {
     payment_method_types: ["card"],
@@ -45,7 +55,7 @@ const postCheckout = async (userData, payload) => {
           product_data: {
             name: "Subscription Fee",
           },
-          unit_amount: amount,
+          unit_amount: amountInCents,
         },
         quantity: 1,
       },
@@ -110,7 +120,6 @@ const webhookManager = async (req) => {
 const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
   try {
     const { id: checkout_session_id, payment_intent } = webhookEventData;
-    console.log(webhookEventData);
 
     // update payment
     const payment = await Payment.findOneAndUpdate(
@@ -119,6 +128,7 @@ const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
         $set: {
           payment_intent_id: payment_intent,
           status: EnumPaymentStatus.SUCCEEDED,
+          subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
         },
       },
       { new: true, runValidators: true }
@@ -152,9 +162,7 @@ const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
       { new: true, runValidators: true }
     );
 
-    console.log(updatedUser);
-
-    // send email
+    // send email to user
     const emailData = {
       name: updatedUser.name,
       subscriptionPlan: payment.subscriptionPlan.subscriptionType,
@@ -169,9 +177,9 @@ const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
 
     // send notification
     postNotification(
-      updatedUser._id,
       "Subscription Success",
-      "Your subscription has been successfully updated."
+      "Your subscription has been successfully updated.",
+      updatedUser._id
     );
 
     postNotification(
@@ -184,23 +192,66 @@ const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
   }
 };
 
-// Delete unpaid payments and bookings every day at midnight
-cron.schedule(
-  "0 0 * * *",
-  catchAsync(async () => {
-    const [paymentDeletionResult] = await Promise.all([
-      Payment.deleteMany({
-        status: ENUM_PAYMENT_STATUS.UNPAID,
-      }),
-    ]);
+// Delete unpaid payments
+const deleteUnpaidPayments = catchAsync(async () => {
+  const paymentDeletionResult = await Payment.deleteMany({
+    status: EnumPaymentStatus.UNPAID,
+  });
 
-    if (paymentDeletionResult.deletedCount > 0) {
-      logger.info(
-        `Deleted ${paymentDeletionResult.deletedCount} unpaid payments`
-      );
+  if (paymentDeletionResult.deletedCount > 0) {
+    logger.info(
+      `Deleted ${paymentDeletionResult.deletedCount} unpaid payments`
+    );
+  }
+});
+
+// Update expired subscriptions
+const updateExpiredSubscriptions = catchAsync(async () => {
+  const expiredSubscriptions = await Payment.find({
+    subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
+    subscriptionEndDate: { $lt: new Date() },
+  });
+
+  if (expiredSubscriptions.length > 0) {
+    logger.info(`Updated ${expiredSubscriptions.length} expired subscriptions`);
+  }
+});
+
+// update user subscription status
+const updateUserSubscriptionStatus = catchAsync(async () => {
+  const updatedUser = await User.updateMany(
+    {
+      subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
+      subscriptionEndDate: { $lt: new Date() },
+    },
+    {
+      $set: {
+        isSubscribed: false,
+        subscriptionPlan: null,
+        subscriptionStartDate: null,
+        subscriptionEndDate: null,
+      },
     }
-  })
-);
+  );
+
+  // send an email notification to user
+  const emailData = {
+    name: updatedUser.name,
+  };
+
+  EmailHelpers.sendSubscriptionExpiredEmail(updatedUser.email, emailData);
+
+  if (updatedUser.modifiedCount > 0) {
+    logger.info(`Updated ${updatedUser.modifiedCount} expired subscriptions`);
+  }
+});
+
+// Run cron job every day at midnight
+cron.schedule("0 0 * * *", () => {
+  deleteUnpaidPayments();
+  updateExpiredSubscriptions();
+  updateUserSubscriptionStatus();
+});
 
 const StripeService = {
   postCheckout,

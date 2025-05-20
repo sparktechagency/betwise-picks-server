@@ -1,4 +1,4 @@
-const bookingEmailTemp = (data) =>
+const subscriptionExpiredTemp = (data) =>
   ` 
       <html>
         <head>
@@ -70,39 +70,14 @@ const bookingEmailTemp = (data) =>
           <div class="container">
 
             <div class="logo">
-              <img src="${
-                process.env.EMAIL_TEMP_IMAGE
-              }" alt="Logo" class="logo-img" />
+              <img src="${process.env.EMAIL_TEMP_IMAGE}" alt="Logo" class="logo-img" />
             </div>
 
-            <h1>Subscription Confirmation</h1>
+            <h1>Subscription Expired</h1>
             <p>Hello, ${data.name},</p>
-            <p>Thank you for subscribing with <strong>BetWise Picks</strong>. Here are your subscription details:</p>
-
-            <table>
-              <tr>
-                <th>Subscription Plan</th>
-                <td>${data.subscriptionPlan}</td>
-              </tr>
-              <tr>
-                <th>Price</th>
-                <td>${data.price} ${data.currency.trim().toUpperCase()}</td>
-              </tr>
-              <tr>
-                <th>Subscription Start Date</th>
-                <td>${data.startDate}</td>
-              </tr>
-              <tr>
-                <th>Subscription End Date</th>
-                <td>${data.endDate}</td>
-              </tr>
-              <tr>
-                <th>Transaction ID</th>
-                <td>${data.payment_intent_id}</td>
-              </tr>
-            </table>
-
-            <p>We look forward to serving you. If you have any questions, feel free to contact us at <a href="mailto:thakursaad613@gmail.com">thakursaad613@gmail.com</a>.</p>
+            <p>We wanted to let you know that your subscription with <strong>BetWise Picks</strong> has expired.</p>
+            <p>To continue enjoying our expert picks and premium features, please consider renewing your subscription.</p>
+            <p>If you need any assistance or have questions, feel free to contact us at <a href="mailto:thakursaad613@gmail.com">thakursaad613@gmail.com</a>.</p>
             <p>Best regards,<br>The BetWise Picks Team</p>
           </div>
           <div class="footer">
@@ -113,4 +88,4 @@ const bookingEmailTemp = (data) =>
       </html>
     `;
 
-module.exports = bookingEmailTemp;
+module.exports = subscriptionExpiredTemp;

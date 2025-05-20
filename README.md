@@ -51,7 +51,7 @@ npm i express bcrypt mongo mongodb mongoose cors jsonwebtoken dotenv ejs express
 <details>
 <summary>🧪 Commented Code</summary>
 
-1.
+1. stripe.service.js > postCheckout -- check if user is already subscribed
 
 </details>
 
