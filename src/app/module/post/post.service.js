@@ -4,6 +4,7 @@ const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const unlinkFile = require("../../../util/unlinkFile");
+const deleteFalsyField = require("../../../util/deleteFalsyField");
 
 const postPost = async (req) => {
   const { user: userData, body: payload, files } = req;
@@ -50,6 +51,8 @@ const getPost = async (userData, query) => {
 };
 
 const getAllPosts = async (userData, query) => {
+  deleteFalsyField(query);
+
   const postQuery = new QueryBuilder(
     Post.find({}).populate("postedBy").lean(),
     query
