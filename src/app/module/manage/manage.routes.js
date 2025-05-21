@@ -40,6 +40,11 @@ router
     ManageController.deleteAboutUs
   )
   .post("/add-faq", auth(config.auth_level.admin), ManageController.addFaq)
+  .patch(
+    "/update-faq",
+    auth(config.auth_level.admin),
+    ManageController.updateFaq
+  )
   .get("/get-faq", ManageController.getFaq)
   .delete(
     "/delete-faq",
