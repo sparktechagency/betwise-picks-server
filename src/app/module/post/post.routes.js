@@ -20,6 +20,11 @@ router
     PostController.getAllPosts
   )
   .get(
+    "/get-all-posts-admin",
+    auth(config.auth_level.admin),
+    PostController.getAllPostsAdmin
+  )
+  .get(
     "/get-all-unique-types",
     auth(config.auth_level.user),
     PostController.getAllUniqueTypes

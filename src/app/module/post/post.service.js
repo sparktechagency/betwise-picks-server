@@ -4,6 +4,9 @@ const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const unlinkFile = require("../../../util/unlinkFile");
+const deleteFalsyField = require("../../../util/deleteFalsyField");
+const { EnumSubscriptionPlan } = require("../../../util/enum");
+const User = require("../user/User");
 
 const postPost = async (req) => {
   const { user: userData, body: payload, files } = req;
@@ -50,6 +53,62 @@ const getPost = async (userData, query) => {
 };
 
 const getAllPosts = async (userData, query) => {
+  const user = await User.findById(userData.userId)
+    .populate("subscriptionPlan")
+    .lean();
+
+  if (!user.isSubscribed)
+    throw new ApiError(status.BAD_REQUEST, "User is not subscribed");
+
+  const queryObj = {};
+
+  switch (user.subscriptionPlan) {
+    case EnumSubscriptionPlan.GOLD:
+      queryObj.targetUser = {
+        $in: [
+          EnumSubscriptionPlan.GOLD,
+          EnumSubscriptionPlan.SILVER,
+          EnumSubscriptionPlan.BRONZE,
+        ],
+      };
+      break;
+    case EnumSubscriptionPlan.SILVER:
+      queryObj.targetUser = {
+        $in: [EnumSubscriptionPlan.SILVER, EnumSubscriptionPlan.BRONZE],
+      };
+      break;
+    case EnumSubscriptionPlan.BRONZE:
+      queryObj.targetUser = {
+        $in: [EnumSubscriptionPlan.BRONZE],
+      };
+      break;
+    default:
+      break;
+  }
+
+  deleteFalsyField(query);
+
+  const postQuery = new QueryBuilder(Post.find(queryObj).lean(), query)
+    .search(["postTitle", "predictionDescription", "predictionType"])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const [posts, meta] = await Promise.all([
+    postQuery.modelQuery,
+    postQuery.countTotal(),
+  ]);
+
+  return {
+    meta,
+    posts,
+  };
+};
+
+const getAllPostsAdmin = async (query) => {
+  deleteFalsyField(query);
+
   const postQuery = new QueryBuilder(
     Post.find({}).populate("postedBy").lean(),
     query
@@ -160,6 +219,7 @@ const PostService = {
   postPost,
   getPost,
   getAllPosts,
+  getAllPostsAdmin,
   getAllUniqueTypes,
   updatePost,
   deletePost,

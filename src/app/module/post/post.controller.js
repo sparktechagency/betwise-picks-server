@@ -32,6 +32,16 @@ const getAllPosts = catchAsync(async (req, res) => {
   });
 });
 
+const getAllPostsAdmin = catchAsync(async (req, res) => {
+  const result = await PostService.getAllPostsAdmin(req.query);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Posts retrieved",
+    data: result,
+  });
+});
+
 const getAllUniqueTypes = catchAsync(async (req, res) => {
   const result = await PostService.getAllUniqueTypes();
   sendResponse(res, {
@@ -66,6 +76,7 @@ const PostController = {
   postPost,
   getPost,
   getAllPosts,
+  getAllPostsAdmin,
   getAllUniqueTypes,
   updatePost,
   deletePost,
