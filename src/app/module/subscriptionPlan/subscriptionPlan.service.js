@@ -3,6 +3,7 @@ const SubscriptionPlan = require("./SubscriptionPlan");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
+const IsVisible = require("./IsVisible");
 
 const postSubscriptionPlan = async (userData, payload) => {
   validateFields(payload, [
@@ -93,12 +94,22 @@ const deleteSubscriptionPlan = async (userData, payload) => {
   return subscriptionPlan;
 };
 
+const updateSubscriptionSectionVisibility = async (userData, payload) => {
+  const isVisible = await IsVisible.findOne({});
+
+  isVisible.isVisible = !isVisible.isVisible;
+  await isVisible.save();
+
+  return isVisible;
+};
+
 const SubscriptionPlanService = {
   postSubscriptionPlan,
   getSubscriptionPlan,
   getAllSubscriptionPlans,
   updateSubscriptionPlan,
   deleteSubscriptionPlan,
+  updateSubscriptionSectionVisibility,
 };
 
 module.exports = SubscriptionPlanService;
