@@ -71,6 +71,8 @@ const postCheckout = async (userData, payload) => {
   }
 
   const { id: checkout_session_id, url } = session || {};
+  const subscriptionStartDate = new Date();
+  const subscriptionEndDate = getEndDate(subscriptionPlan.duration);
 
   const paymentData = {
     user: userData.userId,
@@ -78,6 +80,8 @@ const postCheckout = async (userData, payload) => {
     checkout_session_id,
     subscriptionPlan: subscriptionPlan._id,
     status: EnumPaymentStatus.UNPAID,
+    subscriptionStartDate,
+    subscriptionEndDate,
   };
 
   const payment = await Payment.create(paymentData);
@@ -142,10 +146,7 @@ const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
     // update user subscription
     // calculate and stamp subscriptionStartDate and subscriptionEndDate date based on the duration
     const subscriptionStartDate = new Date();
-    const subscriptionEndDate =
-      payment.subscriptionPlan.duration === EnumSubscriptionPlanDuration.MONTHLY
-        ? new Date(new Date().setMonth(new Date().getMonth() + 1)) //  first day of next month
-        : new Date(new Date().setFullYear(new Date().getFullYear() + 1)); // first day of next year
+    const subscriptionEndDate = getEndDate(payment.subscriptionPlan.duration);
 
     const updateUserData = {
       $set: {
@@ -192,6 +193,17 @@ const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
   }
 };
 
+const getEndDate = (duration) => {
+  switch (duration) {
+    case EnumSubscriptionPlanDuration.MONTHLY:
+      return new Date(new Date().setMonth(new Date().getMonth() + 1)); //  first day of next month
+    case EnumSubscriptionPlanDuration.YEARLY:
+      return new Date(new Date().setFullYear(new Date().getFullYear() + 1)); // first day of next year
+    default:
+      throw new ApiError(status.BAD_REQUEST, "Invalid duration");
+  }
+};
+
 // Delete unpaid payments
 const deleteUnpaidPayments = catchAsync(async () => {
   const paymentDeletionResult = await Payment.deleteMany({
@@ -207,21 +219,45 @@ const deleteUnpaidPayments = catchAsync(async () => {
 
 // Update expired subscriptions
 const updateExpiredSubscriptions = catchAsync(async () => {
-  const expiredSubscriptions = await Payment.find({
-    subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
-    subscriptionEndDate: { $lt: new Date() },
-  });
+  const expiredSubscriptions = await Payment.updateMany(
+    {
+      subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
+      subscriptionEndDate: { $lt: new Date() },
+    },
+    {
+      $set: {
+        subscriptionStatus: EnumSubscriptionStatus.EXPIRED,
+      },
+    }
+  );
 
-  if (expiredSubscriptions.length > 0) {
-    logger.info(`Updated ${expiredSubscriptions.length} expired subscriptions`);
+  if (expiredSubscriptions.modifiedCount > 0) {
+    logger.info(
+      `Updated ${expiredSubscriptions.modifiedCount} expired subscriptions`
+    );
   }
 });
 
 // update user subscription status
 const updateUserSubscriptionStatus = catchAsync(async () => {
+  const subscriptionExpiredUsers = await User.find({
+    isSubscribed: true,
+    subscriptionEndDate: { $lt: new Date() },
+  });
+
+  const emailOfExpiredUsers = subscriptionExpiredUsers.map(
+    (user) => user.email
+  );
+
+  // send email to each expired user
+  emailOfExpiredUsers.forEach((email) => {
+    EmailHelpers.sendSubscriptionExpiredEmail(email);
+    console.log("email sent to", email);
+  });
+
   const updatedUser = await User.updateMany(
     {
-      subscriptionStatus: EnumSubscriptionStatus.ACTIVE,
+      isSubscribed: true,
       subscriptionEndDate: { $lt: new Date() },
     },
     {
@@ -234,21 +270,16 @@ const updateUserSubscriptionStatus = catchAsync(async () => {
     }
   );
 
-  // send an email notification to user
-  const emailData = {
-    name: updatedUser.name,
-  };
-
-  EmailHelpers.sendSubscriptionExpiredEmail(updatedUser.email, emailData);
-
   if (updatedUser.modifiedCount > 0) {
-    logger.info(`Updated ${updatedUser.modifiedCount} expired subscriptions`);
+    logger.info(
+      `Updated user ${updatedUser.modifiedCount} subscription status`
+    );
   }
 });
 
 // Run cron job every day at midnight
 cron.schedule("0 0 * * *", () => {
-  // cron.schedule("* * * * * *", () => {
+  // cron.schedule("* * * * *", () => {
   deleteUnpaidPayments();
   updateExpiredSubscriptions();
   updateUserSubscriptionStatus();

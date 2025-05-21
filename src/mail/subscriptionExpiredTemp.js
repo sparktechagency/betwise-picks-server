@@ -74,7 +74,7 @@ const subscriptionExpiredTemp = (data) =>
             </div>
 
             <h1>Subscription Expired</h1>
-            <p>Hello, ${data.name},</p>
+            <p>Hello</p>
             <p>We wanted to let you know that your subscription with <strong>BetWise Picks</strong> has expired.</p>
             <p>To continue enjoying our expert picks and premium features, please consider renewing your subscription.</p>
             <p>If you need any assistance or have questions, feel free to contact us at <a href="mailto:thakursaad613@gmail.com">thakursaad613@gmail.com</a>.</p>
