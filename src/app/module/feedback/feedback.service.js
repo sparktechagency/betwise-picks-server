@@ -56,24 +56,21 @@ const getMyFeedback = async (userData) => {
 };
 
 const getAllFeedbacks = async (userData, query) => {
-  const queryObj =
-    userData.role === EnumUserRole.ADMIN ? {} : { user: userData.userId };
-
-  const feedbackQuery = new QueryBuilder(Feedback.find(queryObj).lean(), query)
+  const feedbackQuery = new QueryBuilder(Feedback.find({}).lean(), query)
     .search([])
     .filter()
     .sort()
     .paginate()
     .fields();
 
-  const [feedback, meta] = await Promise.all([
+  const [feedbacks, meta] = await Promise.all([
     feedbackQuery.modelQuery,
     feedbackQuery.countTotal(),
   ]);
 
   return {
     meta,
-    feedback,
+    feedbacks,
   };
 };
 
