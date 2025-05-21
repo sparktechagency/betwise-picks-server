@@ -30,6 +30,11 @@ router
     "/delete-subscriptionPlan",
     auth(config.auth_level.super_admin),
     SubscriptionPlanController.deleteSubscriptionPlan
+  )
+  .patch(
+    "/update-subscriptionSectionVisibility",
+    auth(config.auth_level.super_admin),
+    SubscriptionPlanController.updateSubscriptionSectionVisibility
   );
 
 module.exports = router;

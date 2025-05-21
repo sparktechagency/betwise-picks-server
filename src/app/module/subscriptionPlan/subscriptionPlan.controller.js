@@ -67,12 +67,27 @@ const deleteSubscriptionPlan = catchAsync(async (req, res) => {
   });
 });
 
+const updateSubscriptionSectionVisibility = catchAsync(async (req, res) => {
+  const result =
+    await SubscriptionPlanService.updateSubscriptionSectionVisibility(
+      req.user,
+      req.body
+    );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "SubscriptionPlan updated",
+    data: result,
+  });
+});
+
 const SubscriptionPlanController = {
   postSubscriptionPlan,
   getSubscriptionPlan,
   getAllSubscriptionPlans,
   updateSubscriptionPlan,
   deleteSubscriptionPlan,
+  updateSubscriptionSectionVisibility,
 };
 
 module.exports = SubscriptionPlanController;
