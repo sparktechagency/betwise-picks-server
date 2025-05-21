@@ -35,6 +35,11 @@ router
     "/update-subscriptionSectionVisibility",
     auth(config.auth_level.super_admin),
     SubscriptionPlanController.updateSubscriptionSectionVisibility
+  )
+  .get(
+    "/get-subscriptionSectionVisibility",
+    auth(config.auth_level.user),
+    SubscriptionPlanController.getSubscriptionSectionVisibility
   );
 
 module.exports = router;

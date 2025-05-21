@@ -103,6 +103,12 @@ const updateSubscriptionSectionVisibility = async (userData, payload) => {
   return isVisible;
 };
 
+const getSubscriptionSectionVisibility = async (userData, payload) => {
+  const isVisible = await IsVisible.findOne({}).lean();
+
+  return isVisible;
+};
+
 const SubscriptionPlanService = {
   postSubscriptionPlan,
   getSubscriptionPlan,
@@ -110,6 +116,7 @@ const SubscriptionPlanService = {
   updateSubscriptionPlan,
   deleteSubscriptionPlan,
   updateSubscriptionSectionVisibility,
+  getSubscriptionSectionVisibility,
 };
 
 module.exports = SubscriptionPlanService;
