@@ -53,42 +53,62 @@ const getPost = async (userData, query) => {
 };
 
 const getAllPosts = async (userData, query) => {
+  /**
+   * This function returns a list of posts accessible to the user based on the subscription plan.
+   * It filters out the posts based on the allowed subscription plans.
+   * The allowed plans are determined by the user's subscription plan.
+   * If the user is not subscribed to any plan, it throws an error.
+   * If the user is subscribed to a plan but the target user does not match any of the allowed plans,
+   * it throws an error.
+   * @param {Object} userData - user data
+   * @param {Object} query - query object
+   * @return {Object} - list of posts and meta data
+   */
+
   const user = await User.findById(userData.userId)
-    .populate("subscriptionPlan")
-    .lean();
+    .select("isSubscribed subscriptionPlan")
+    .populate("subscriptionPlan", "subscriptionType")
+    .lean()
+    .hint({ _id: 1 });
 
   if (!user.isSubscribed)
     throw new ApiError(status.BAD_REQUEST, "User is not subscribed");
 
-  const queryObj = {};
+  const userPlanType = user.subscriptionPlan.subscriptionType;
+  if (!userPlanType) throw new ApiError(status.BAD_REQUEST, "Invalid plan");
 
-  switch (user.subscriptionPlan) {
-    case EnumSubscriptionPlan.GOLD:
-      queryObj.targetUser = {
-        $in: [
-          EnumSubscriptionPlan.GOLD,
-          EnumSubscriptionPlan.SILVER,
-          EnumSubscriptionPlan.BRONZE,
-        ],
-      };
-      break;
-    case EnumSubscriptionPlan.SILVER:
-      queryObj.targetUser = {
-        $in: [EnumSubscriptionPlan.SILVER, EnumSubscriptionPlan.BRONZE],
-      };
-      break;
-    case EnumSubscriptionPlan.BRONZE:
-      queryObj.targetUser = {
-        $in: [EnumSubscriptionPlan.BRONZE],
-      };
-      break;
-    default:
-      break;
+  const planAccessLevels = {
+    [EnumSubscriptionPlan.GOLD]: [
+      EnumSubscriptionPlan.GOLD,
+      EnumSubscriptionPlan.SILVER,
+      EnumSubscriptionPlan.BRONZE,
+    ],
+    [EnumSubscriptionPlan.SILVER]: [
+      EnumSubscriptionPlan.SILVER,
+      EnumSubscriptionPlan.BRONZE,
+    ],
+    [EnumSubscriptionPlan.BRONZE]: [EnumSubscriptionPlan.BRONZE],
+  };
+
+  const allowedPlans = planAccessLevels[userPlanType];
+  if (!allowedPlans)
+    throw new ApiError(status.BAD_REQUEST, "Invalid subscription type");
+
+  if (query.targetUser && !allowedPlans.includes(query.targetUser)) {
+    throw new ApiError(
+      status.BAD_REQUEST,
+      "You are not allowed to see this content"
+    );
   }
 
   deleteFalsyField(query);
 
-  const postQuery = new QueryBuilder(Post.find(queryObj).lean(), query)
+  const baseQuery = {
+    targetUser: { $in: allowedPlans },
+    ...query.filter,
+  };
+
+  const postQuery = new QueryBuilder(Post.find(baseQuery).lean(), query)
     .search(["postTitle", "predictionDescription", "predictionType"])
     .filter()
     .sort()
