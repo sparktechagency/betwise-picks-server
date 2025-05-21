@@ -101,9 +101,18 @@ const getRevenue = async (query) => {
 };
 
 const getTotalOverview = async () => {
-  const [totalAuth, totalUser, totalAdmin, totalPosts] = await Promise.all([
+  const [
+    totalAuth,
+    totalUser,
+    totalSubscribedUsers,
+    totalUnsubscribedUsers,
+    totalAdmin,
+    totalPosts,
+  ] = await Promise.all([
     Auth.countDocuments(),
     User.countDocuments(),
+    User.countDocuments({ isSubscribed: true }),
+    User.countDocuments({ isSubscribed: false }),
     Admin.countDocuments(),
     Post.countDocuments(),
   ]);
@@ -111,6 +120,8 @@ const getTotalOverview = async () => {
   return {
     totalAuth,
     totalUser,
+    totalSubscribedUsers,
+    totalUnsubscribedUsers,
     totalAdmin,
     totalPosts,
   };
