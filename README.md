@@ -18,7 +18,7 @@ npm i express bcrypt mongo mongodb mongoose cors jsonwebtoken dotenv ejs express
 <details>
 <summary>To do</summary>
 
-1.
+1. show users posts based on their subscription plan done form backend
 
 </details>
 

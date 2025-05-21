@@ -91,7 +91,7 @@ const getUser = async (query) => {
 
 const getAllUsers = async (userData, query) => {
   const userQuery = new QueryBuilder(
-    User.find({}).populate("authId").lean(),
+    User.find({}).populate("authId subscriptionPlan").lean(),
     query
   )
     .search(["email", "name"])

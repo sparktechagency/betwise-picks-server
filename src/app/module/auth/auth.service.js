@@ -86,8 +86,14 @@ const registrationAccount = async (payload) => {
     case EnumUserRole.SUPER_ADMIN:
       await SuperAdmin.create(userData);
       break;
-    default:
+    case EnumUserRole.ADMIN:
+      await Admin.create(userData);
+      break;
+    case EnumUserRole.USER:
       await User.create(userData);
+      break;
+    default:
+      throw new ApiError(status.BAD_REQUEST, "Invalid role. But auth created");
   }
 
   return {
@@ -140,6 +146,7 @@ const activateAccount = async (payload) => {
   );
 
   let result;
+
   switch (auth.role) {
     case EnumUserRole.SUPER_ADMIN:
       result = await SuperAdmin.findOne({ authId: auth._id }).lean();

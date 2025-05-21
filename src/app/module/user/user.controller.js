@@ -52,7 +52,7 @@ const updateBlockUnblockUser = catchAsync(async (req, res) => {
 });
 
 const getAllUsers = catchAsync(async (req, res) => {
-  const result = await UserService.getAllUsers(req.user, req.body);
+  const result = await UserService.getAllUsers(req.user, req.query);
   sendResponse(res, {
     statusCode: 200,
     success: true,
