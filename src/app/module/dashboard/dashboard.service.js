@@ -2,106 +2,66 @@ const { default: status } = require("http-status");
 const Announcement = require("./Announcement");
 const validateFields = require("../../../util/validateFields");
 const Payment = require("../payment/Payment");
+const { EnumPaymentStatus } = require("../../../util/enum");
 
 const getRevenue = async (query) => {
   const { year: strYear } = query;
 
-  validateFields(query, ["year"]);
-
   const year = Number(strYear);
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year + 1, 0, 1);
-  const result = await Payment.aggregate([
-    {
-      $facet: {
-        distinctYears: [
-          {
-            $group: {
-              _id: { $year: "$createdAt" },
-            },
-          },
-          {
-            $sort: { _id: 1 },
-          },
-          {
-            $project: {
-              year: "$_id",
-              _id: 0,
-            },
-          },
-        ],
-        monthlyRevenue: [
-          {
-            $match: {
-              createdAt: { $gte: startDate, $lt: endDate },
-              paymentFor: "coin_purchase", // ✅ make sure to filter if needed
-              status: EnumPaymentStatus.SUCCEEDED,
-            },
-          },
-          {
-            $project: {
-              amountForCoinPurchase: 1,
-              month: { $month: "$createdAt" },
-            },
-          },
-          {
-            $group: {
-              _id: "$month",
-              totalRevenue: { $sum: "$amountForCoinPurchase" },
-            },
-          },
-          {
-            $sort: { _id: 1 },
-          },
-        ],
-        totalRevenueAllTime: [
-          {
-            $match: {
-              paymentFor: EnumPaymentFor.COIN_PURCHASE,
-              status: EnumPaymentStatus.SUCCEEDED,
-            },
-          },
-          {
-            $group: {
-              _id: null,
-              total: { $sum: "$amountForCoinPurchase" },
-            },
-          },
-        ],
-        tripRevenueBreakdown: [
-          {
-            $match: {
-              paymentFor: "trip",
-              status: EnumPaymentStatus.SUCCEEDED,
-            },
-          },
-          {
-            $group: {
-              _id: "$paymentType", // cash / coin
-              total: {
-                $sum: {
-                  $add: [
-                    { $ifNull: ["$amountInCash", 0] },
-                    { $ifNull: ["$amountInCoins", 0] },
-                  ],
-                },
-              },
-            },
-          },
-          {
-            $sort: { total: 1 },
-          },
-        ],
-      },
-    },
-  ]);
 
-  const {
-    distinctYears = [],
-    monthlyRevenue = [],
-    totalRevenueAllTime = [],
-    tripRevenueBreakdown = [],
-  } = result[0] || {};
+  const [distinctYears, revenue] = await Promise.all([
+    Payment.aggregate([
+      {
+        $group: {
+          _id: { $year: "$createdAt" },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+      {
+        $project: {
+          year: "$_id",
+          _id: 0,
+        },
+      },
+    ]),
+
+    Payment.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: startDate,
+            $lt: endDate,
+          },
+          status: EnumPaymentStatus.SUCCEEDED,
+        },
+      },
+      {
+        $project: {
+          amount: 1,
+          month: { $month: "$createdAt" },
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          totalRevenue: {
+            $sum: "$amount",
+          },
+        },
+      },
+      {
+        $sort: {
+          _id: 1,
+        },
+      },
+    ]),
+  ]);
 
   const totalYears = distinctYears.map((item) => item.year);
 
@@ -120,26 +80,19 @@ const getRevenue = async (query) => {
     "December",
   ];
 
-  const monthlyRevenueObj = monthNames.reduce((acc, month) => {
+  const monthlyRevenue = monthNames.reduce((acc, month) => {
     acc[month] = 0;
     return acc;
   }, {});
 
-  monthlyRevenue.forEach((r) => {
+  revenue.forEach((r) => {
     const monthName = monthNames[r._id - 1];
-    monthlyRevenueObj[monthName] = r.totalRevenue;
-  });
-
-  const tripPaymentAnalysis = {};
-  tripRevenueBreakdown.forEach((item) => {
-    tripPaymentAnalysis[item._id] = item.total;
+    monthlyRevenue[monthName] = r.totalRevenue;
   });
 
   return {
-    totalRevenueAllTime: totalRevenueAllTime[0]?.total || 0,
-    tripPaymentAnalysis,
     total_years: totalYears,
-    monthlyRevenue: monthlyRevenueObj,
+    monthlyRevenue,
   };
 };
 
