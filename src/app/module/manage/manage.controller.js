@@ -102,6 +102,16 @@ const addFaq = catchAsync(async (req, res) => {
   });
 });
 
+const updateFaq = catchAsync(async (req, res) => {
+  const result = await ManageService.updateFaq(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: result.message ? result.message : "Successful",
+    data: result.result ? result.result : result,
+  });
+});
+
 const getFaq = catchAsync(async (req, res) => {
   const result = await ManageService.getFaq();
   sendResponse(res, {
@@ -163,6 +173,7 @@ const ManageController = {
   getAboutUs,
   deleteAboutUs,
   addFaq,
+  updateFaq,
   getFaq,
   deleteFaq,
   addContactUs,

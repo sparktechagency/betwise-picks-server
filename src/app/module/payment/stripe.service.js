@@ -248,6 +248,7 @@ const updateUserSubscriptionStatus = catchAsync(async () => {
 
 // Run cron job every day at midnight
 cron.schedule("0 0 * * *", () => {
+  // cron.schedule("* * * * * *", () => {
   deleteUnpaidPayments();
   updateExpiredSubscriptions();
   updateUserSubscriptionStatus();

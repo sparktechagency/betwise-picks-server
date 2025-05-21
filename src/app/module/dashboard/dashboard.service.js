@@ -3,6 +3,10 @@ const Announcement = require("./Announcement");
 const validateFields = require("../../../util/validateFields");
 const Payment = require("../payment/Payment");
 const { EnumPaymentStatus } = require("../../../util/enum");
+const Auth = require("../auth/Auth");
+const User = require("../user/User");
+const Admin = require("../admin/Admin");
+const Post = require("../post/Post");
 
 const getRevenue = async (query) => {
   const { year: strYear } = query;
@@ -97,32 +101,18 @@ const getRevenue = async (query) => {
 };
 
 const getTotalOverview = async () => {
-  const [
-    totalDriver,
-    onlineDriver,
-    totalUser,
-    onlineUser,
-    totalAdmin,
-    totalAuth,
-    totalCars,
-  ] = await Promise.all([
-    User.countDocuments({ role: EnumUserRole.DRIVER }),
-    User.countDocuments({ role: EnumUserRole.DRIVER, isOnline: true }),
-    User.countDocuments({ role: EnumUserRole.USER }),
-    User.countDocuments({ role: EnumUserRole.USER, isOnline: true }),
-    Admin.countDocuments(),
+  const [totalAuth, totalUser, totalAdmin, totalPosts] = await Promise.all([
     Auth.countDocuments(),
-    Car.countDocuments(),
+    User.countDocuments(),
+    Admin.countDocuments(),
+    Post.countDocuments(),
   ]);
 
   return {
-    totalDriver,
-    onlineDriver,
-    totalUser,
-    onlineUser,
-    totalAdmin,
     totalAuth,
-    totalCars,
+    totalUser,
+    totalAdmin,
+    totalPosts,
   };
 };
 
