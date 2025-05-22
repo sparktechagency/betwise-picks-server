@@ -63,9 +63,6 @@ const updateAsReadUnread = async (userData, payload) => {
     $set: { isRead: payload.isRead },
   });
 
-  if (!result.modifiedCount)
-    throw new ApiError(status.BAD_REQUEST, "Already updated");
-
   return result;
 };
 
