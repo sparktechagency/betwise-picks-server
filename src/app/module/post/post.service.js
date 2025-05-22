@@ -61,12 +61,13 @@ const getAllPosts = async (userData, query) => {
    * If the user is not subscribed to any plan, it throws an error.
    * If the user is subscribed to a plan but the target user does not match any of the allowed plans,
    * it throws an error.
+   * If the subscription plan visibility is disabled, it returns all posts.
    * @param {Object} userData - user data
    * @param {Object} query - query object
    * @return {Object} - list of posts and meta data
    */
 
-  const [user, isVisible] = await Promise.all([
+  const [user, isVisibleDoc] = await Promise.all([
     User.findById(userData.userId)
       .select("isSubscribed subscriptionPlan")
       .populate("subscriptionPlan", "subscriptionType")
@@ -76,45 +77,45 @@ const getAllPosts = async (userData, query) => {
     IsVisible.findOne({}).lean(),
   ]);
 
-  if (!user.isSubscribed)
-    throw new ApiError(status.BAD_REQUEST, "User is not subscribed");
-
-  const userPlanType = user.subscriptionPlan.subscriptionType;
-  if (!userPlanType) throw new ApiError(status.BAD_REQUEST, "Invalid plan");
-
-  const planAccessLevels = {
-    [EnumSubscriptionPlan.GOLD]: [
-      EnumSubscriptionPlan.GOLD,
-      EnumSubscriptionPlan.SILVER,
-      EnumSubscriptionPlan.BRONZE,
-    ],
-    [EnumSubscriptionPlan.SILVER]: [
-      EnumSubscriptionPlan.SILVER,
-      EnumSubscriptionPlan.BRONZE,
-    ],
-    [EnumSubscriptionPlan.BRONZE]: [EnumSubscriptionPlan.BRONZE],
-  };
-
-  const allowedPlans = planAccessLevels[userPlanType];
-  if (!allowedPlans)
-    throw new ApiError(status.BAD_REQUEST, "Invalid subscription type");
-
-  if (query.targetUser && !allowedPlans.includes(query.targetUser)) {
-    throw new ApiError(
-      status.BAD_REQUEST,
-      "You are not allowed to see this content"
-    );
-  }
+  const isVisible = isVisibleDoc?.isVisible;
 
   deleteFalsyField(query);
 
-  const baseQuery = {
-    // ...(isVisible.isVisible === true && { targetUser: { $in: allowedPlans } }),
-    targetUser: { $in: allowedPlans },
-    ...query.filter,
-  };
+  let baseQuery = { ...query.filter };
 
-  console.log(baseQuery);
+  if (isVisible) {
+    if (!user?.isSubscribed)
+      throw new ApiError(status.BAD_REQUEST, "User is not subscribed");
+
+    const userPlanType = user.subscriptionPlan?.subscriptionType;
+    if (!userPlanType) throw new ApiError(status.BAD_REQUEST, "Invalid plan");
+
+    const planAccessLevels = {
+      [EnumSubscriptionPlan.GOLD]: [
+        EnumSubscriptionPlan.GOLD,
+        EnumSubscriptionPlan.SILVER,
+        EnumSubscriptionPlan.BRONZE,
+      ],
+      [EnumSubscriptionPlan.SILVER]: [
+        EnumSubscriptionPlan.SILVER,
+        EnumSubscriptionPlan.BRONZE,
+      ],
+      [EnumSubscriptionPlan.BRONZE]: [EnumSubscriptionPlan.BRONZE],
+    };
+
+    const allowedPlans = planAccessLevels[userPlanType];
+    if (!allowedPlans)
+      throw new ApiError(status.BAD_REQUEST, "Invalid subscription type");
+
+    if (query.targetUser && !allowedPlans.includes(query.targetUser)) {
+      throw new ApiError(
+        status.BAD_REQUEST,
+        "You are not allowed to see this content"
+      );
+    }
+
+    baseQuery.targetUser = { $in: allowedPlans };
+  }
 
   const postQuery = new QueryBuilder(Post.find(baseQuery).lean(), query)
     .search(["postTitle", "predictionDescription", "predictionType"])
