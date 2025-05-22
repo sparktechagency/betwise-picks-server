@@ -71,7 +71,7 @@ const deleteNotification = async (userData, payload) => {
   validateFields(payload, ["notificationId"]);
 
   const Model =
-    userData.role === EnumUserRole.ADMIN ? AdminNotification : Notification;
+    userData.role === EnumUserRole.USER ? Notification : AdminNotification;
 
   const notification = await Model.deleteOne({
     _id: payload.notificationId,
