@@ -3,7 +3,7 @@ const sendResponse = require("../../util/sendResponse");
 
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  limit: 10,
+  limit: 601,
   standardHeaders: "draft-8",
   legacyHeaders: false,
   message: async (req, res) =>

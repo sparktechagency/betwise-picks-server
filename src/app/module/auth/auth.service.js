@@ -234,7 +234,10 @@ const loginAccount = async (payload) => {
     config.jwt.expires_in
   );
 
-  return { accessToken };
+  return {
+    user: result,
+    accessToken,
+  };
 };
 
 const forgotPass = async (payload) => {

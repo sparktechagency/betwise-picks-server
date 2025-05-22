@@ -52,8 +52,8 @@ const getProfile = async (userData) => {
     User.findById(userId).populate("authId subscriptionPlan").lean(),
   ]);
 
-  if (!result.isSubscribed)
-    throw new ApiError(status.FORBIDDEN, "Not subscribed");
+  // if (!result.isSubscribed)
+  //   throw new ApiError(status.FORBIDDEN, "Not subscribed");
 
   if (!result || !auth) throw new ApiError(status.NOT_FOUND, "User not found");
   if (auth.isBlocked)

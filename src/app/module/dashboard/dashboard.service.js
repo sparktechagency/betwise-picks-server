@@ -15,7 +15,24 @@ const getRevenue = async (query) => {
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year + 1, 0, 1);
 
-  const [distinctYears, revenue] = await Promise.all([
+  const [totalRevenue, distinctYears, revenue] = await Promise.all([
+    // get sum of all payments
+    Payment.aggregate([
+      {
+        $match: {
+          status: EnumPaymentStatus.SUCCEEDED,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: {
+            $sum: "$amount",
+          },
+        },
+      },
+    ]),
+
     Payment.aggregate([
       {
         $group: {
@@ -95,15 +112,25 @@ const getRevenue = async (query) => {
   });
 
   return {
+    totalRevenue: totalRevenue[0].totalRevenue || 0,
     total_years: totalYears,
     monthlyRevenue,
   };
 };
 
 const getTotalOverview = async () => {
-  const [totalAuth, totalUser, totalAdmin, totalPosts] = await Promise.all([
+  const [
+    totalAuth,
+    totalUser,
+    totalSubscribedUsers,
+    totalUnsubscribedUsers,
+    totalAdmin,
+    totalPosts,
+  ] = await Promise.all([
     Auth.countDocuments(),
     User.countDocuments(),
+    User.countDocuments({ isSubscribed: true }),
+    User.countDocuments({ isSubscribed: false }),
     Admin.countDocuments(),
     Post.countDocuments(),
   ]);
@@ -111,6 +138,8 @@ const getTotalOverview = async () => {
   return {
     totalAuth,
     totalUser,
+    totalSubscribedUsers,
+    totalUnsubscribedUsers,
     totalAdmin,
     totalPosts,
   };

@@ -8,8 +8,8 @@ const updateProfile = async (req) => {
   const { files, body: data } = req;
   const { userId, authId } = req.user;
   const updatedData = {
-    ...(data.address && { address: data.name }),
-    ...(data.phoneNumber && { phoneNumber: data.name }),
+    ...(data.address && { address: data.address }),
+    ...(data.phoneNumber && { phoneNumber: data.phoneNumber }),
     ...(data.name && { name: data.name }),
   };
   const existingUser = await SuperAdmin.findById(userId).lean();
