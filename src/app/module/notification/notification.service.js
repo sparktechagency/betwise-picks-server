@@ -55,8 +55,9 @@ const getAllNotifications = async (userData, query) => {
 
 const updateAsReadUnread = async (userData, payload) => {
   const { role } = userData;
-  const Model = role === EnumUserRole.ADMIN ? AdminNotification : Notification;
-  const queryObj = role === EnumUserRole.ADMIN ? {} : { toId: userData.userId };
+
+  const Model = role === EnumUserRole.USER ? Notification : AdminNotification;
+  const queryObj = role === EnumUserRole.USER ? { toId: userData.userId } : {};
   queryObj.isRead = !payload.isRead;
 
   const result = await Model.updateMany(queryObj, {
