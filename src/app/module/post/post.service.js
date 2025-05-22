@@ -7,6 +7,7 @@ const unlinkFile = require("../../../util/unlinkFile");
 const deleteFalsyField = require("../../../util/deleteFalsyField");
 const { EnumSubscriptionPlan } = require("../../../util/enum");
 const User = require("../user/User");
+const IsVisible = require("../subscriptionPlan/IsVisible");
 
 const postPost = async (req) => {
   const { user: userData, body: payload, files } = req;
@@ -65,11 +66,15 @@ const getAllPosts = async (userData, query) => {
    * @return {Object} - list of posts and meta data
    */
 
-  const user = await User.findById(userData.userId)
-    .select("isSubscribed subscriptionPlan")
-    .populate("subscriptionPlan", "subscriptionType")
-    .lean()
-    .hint({ _id: 1 });
+  const [user, isVisible] = await Promise.all([
+    User.findById(userData.userId)
+      .select("isSubscribed subscriptionPlan")
+      .populate("subscriptionPlan", "subscriptionType")
+      .lean()
+      .hint({ _id: 1 }),
+
+    IsVisible.findOne({}).lean(),
+  ]);
 
   if (!user.isSubscribed)
     throw new ApiError(status.BAD_REQUEST, "User is not subscribed");
@@ -104,9 +109,12 @@ const getAllPosts = async (userData, query) => {
   deleteFalsyField(query);
 
   const baseQuery = {
+    // ...(isVisible.isVisible === true && { targetUser: { $in: allowedPlans } }),
     targetUser: { $in: allowedPlans },
     ...query.filter,
   };
+
+  console.log(baseQuery);
 
   const postQuery = new QueryBuilder(Post.find(baseQuery).lean(), query)
     .search(["postTitle", "predictionDescription", "predictionType"])

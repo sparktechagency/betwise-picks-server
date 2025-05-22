@@ -31,8 +31,9 @@ const getNotification = async (userData, query) => {
  */
 const getAllNotifications = async (userData, query) => {
   const { role } = userData;
-  const Model = role === EnumUserRole.ADMIN ? AdminNotification : Notification;
-  const queryObj = role === EnumUserRole.ADMIN ? {} : { toId: userData.userId };
+
+  const Model = role === EnumUserRole.USER ? Notification : AdminNotification;
+  const queryObj = role === EnumUserRole.USER ? { toId: userData.userId } : {};
 
   const notificationQuery = new QueryBuilder(Model.find(queryObj).lean(), query)
     .search([])

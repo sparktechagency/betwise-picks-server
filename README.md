@@ -19,6 +19,8 @@ npm i express bcrypt mongo mongodb mongoose cors jsonwebtoken dotenv ejs express
 <summary>To do</summary>
 
 1. show users posts based on their subscription plan done form backend
+2. isSubscribed check on profile and get all posts
+3. fix the login limiter
 
 </details>
 
