@@ -70,7 +70,7 @@ const getAllAdmins = async (userData, query) => {
     Admin.find({}).populate("authId").lean(),
     query
   )
-    .search([])
+    .search(["name", "email"])
     .filter()
     .sort()
     .paginate()
@@ -89,7 +89,6 @@ const getAllAdmins = async (userData, query) => {
 
 const updateAdmin = async (req) => {
   const { body: payload, files = {} } = req;
-  console.log("files-------------------------", files, payload);
   validateFields(payload, ["adminId"]);
 
   const admin = await Admin.findById(payload.adminId).lean();
