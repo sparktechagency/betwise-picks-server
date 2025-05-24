@@ -22,6 +22,7 @@ router
   .patch(
     "/update-admin",
     auth(config.auth_level.super_admin),
+    uploadFile(),
     AdminController.updateAdmin
   )
   .patch(

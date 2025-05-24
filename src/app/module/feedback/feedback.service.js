@@ -4,9 +4,7 @@ const ApiError = require("../../../error/ApiError");
 const QueryBuilder = require("../../../builder/queryBuilder");
 const postNotification = require("../../../util/postNotification");
 const Feedback = require("./Feedback");
-const User = require("../user/User");
 const validateFields = require("../../../util/validateFields");
-const { EnumUserRole } = require("../../../util/enum");
 
 const postFeedback = async (userData, payload) => {
   validateFields(payload, ["feedback", "subject"]);
@@ -56,7 +54,17 @@ const getMyFeedback = async (userData) => {
 };
 
 const getAllFeedbacks = async (userData, query) => {
-  const feedbackQuery = new QueryBuilder(Feedback.find({}).lean(), query)
+  const feedbackQuery = new QueryBuilder(
+    Feedback.find({})
+      .populate([
+        {
+          path: "user",
+          select: "name email profile_image -_id",
+        },
+      ])
+      .lean(),
+    query
+  )
     .search([])
     .filter()
     .sort()

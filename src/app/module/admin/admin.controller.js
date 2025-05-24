@@ -33,7 +33,7 @@ const getAllAdmins = catchAsync(async (req, res) => {
 });
 
 const updateAdmin = catchAsync(async (req, res) => {
-  const result = await AdminService.updateAdmin(req.user, req.body);
+  const result = await AdminService.updateAdmin(req);
   sendResponse(res, {
     statusCode: 200,
     success: true,
