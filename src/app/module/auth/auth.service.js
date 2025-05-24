@@ -24,6 +24,7 @@ const registrationAccount = async (payload) => {
     "email",
     "role",
     "name",
+    "phoneNumber",
   ]);
 
   const { code: activationCode, expiredAt: activationCodeExpire } =
@@ -80,6 +81,7 @@ const registrationAccount = async (payload) => {
     authId: auth._id,
     name,
     email,
+    phoneNumber: payload.phoneNumber,
   };
 
   switch (role) {

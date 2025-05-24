@@ -87,15 +87,21 @@ const getAllAdmins = async (userData, query) => {
   };
 };
 
-const updateAdmin = async (userData, payload) => {
+const updateAdmin = async (req) => {
+  const { body: payload, files = {} } = req;
+  console.log("files-------------------------", files, payload);
   validateFields(payload, ["adminId"]);
 
   const admin = await Admin.findById(payload.adminId).lean();
   if (!admin) throw new ApiError(status.NOT_FOUND, "Admin not found");
 
+  if (files.profile_image)
+    if (admin.profile_image) unlinkFile(admin.profile_image);
+
   const updatedAData = {
     ...(payload.name && { name: payload.name }),
     ...(payload.phoneNumber && { phoneNumber: payload.phoneNumber }),
+    ...(files.profile_image && { profile_image: files.profile_image[0].path }),
   };
 
   const [updatedAdmin] = await Promise.all([
