@@ -5,7 +5,7 @@ const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const unlinkFile = require("../../../util/unlinkFile");
 const deleteFalsyField = require("../../../util/deleteFalsyField");
-const { EnumSubscriptionPlan } = require("../../../util/enum");
+const { EnumSubscriptionPlan, EnumUserRole } = require("../../../util/enum");
 const User = require("../user/User");
 const IsVisible = require("../subscriptionPlan/IsVisible");
 
@@ -21,7 +21,6 @@ const postPost = async (req) => {
     "winRate",
     "targetUser",
     "oddsRange",
-    "postedBy",
   ]);
 
   const postData = {
@@ -33,7 +32,9 @@ const postPost = async (req) => {
     targetUser: payload.targetUser,
     oddsRange: payload.oddsRange,
     post_image: files.post_image[0].path,
-    postedBy: userData.userId,
+    ...(userData.role === EnumUserRole.ADMIN
+      ? { postedBy: userData.userId }
+      : { postedBySuperAdmin: userData.userId }),
   };
 
   const post = await Post.create(postData);
@@ -45,7 +46,7 @@ const getPost = async (userData, query) => {
   validateFields(query, ["postId"]);
 
   const post = await Post.findOne({ _id: query.postId })
-    .populate("postedBy")
+    .populate("postedBy postedBySuperAdmin")
     .lean();
 
   if (!post) throw new ApiError(status.NOT_FOUND, "Post not found");
@@ -139,7 +140,7 @@ const getAllPostsAdmin = async (query) => {
   deleteFalsyField(query);
 
   const postQuery = new QueryBuilder(
-    Post.find({}).populate("postedBy").lean(),
+    Post.find({}).populate("postedBy postedBySuperAdmin").lean(),
     query
   )
     .search(["postTitle", "predictionDescription", "predictionType"])
