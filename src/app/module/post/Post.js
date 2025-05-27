@@ -49,7 +49,10 @@ const postSchema = new Schema(
     postedBy: {
       type: ObjectId,
       ref: "Admin",
-      required: true,
+    },
+    postedBySuperAdmin: {
+      type: ObjectId,
+      ref: "SuperAdmin",
     },
   },
   {
