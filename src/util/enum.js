@@ -28,9 +28,12 @@ const EnumUserAccountStatus = {
 };
 
 const EnumSubscriptionPlan = {
-  BRONZE: "bronze",
-  SILVER: "silver",
   GOLD: "gold",
+  SILVER: "silver",
+  BRONZE: "bronze",
+  JACKPOT_CHASE: "jackpot_chase",
+  TRIPE_THREAT: "triple_threat",
+  QUICK_HIT: "quick_hit",
 };
 
 const EnumSubscriptionPlanDuration = {

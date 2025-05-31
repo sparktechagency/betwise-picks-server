@@ -96,12 +96,40 @@ const getAllPosts = async (userData, query) => {
         EnumSubscriptionPlan.GOLD,
         EnumSubscriptionPlan.SILVER,
         EnumSubscriptionPlan.BRONZE,
+        EnumSubscriptionPlan.JACKPOT_CHASE,
+        EnumSubscriptionPlan.TRIPE_THREAT,
+        EnumSubscriptionPlan.QUICK_HIT,
       ],
       [EnumSubscriptionPlan.SILVER]: [
         EnumSubscriptionPlan.SILVER,
         EnumSubscriptionPlan.BRONZE,
+        EnumSubscriptionPlan.JACKPOT_CHASE,
+        EnumSubscriptionPlan.TRIPE_THREAT,
+        EnumSubscriptionPlan.QUICK_HIT,
       ],
-      [EnumSubscriptionPlan.BRONZE]: [EnumSubscriptionPlan.BRONZE],
+      [EnumSubscriptionPlan.SILVER]: [
+        EnumSubscriptionPlan.SILVER,
+        EnumSubscriptionPlan.BRONZE,
+        EnumSubscriptionPlan.JACKPOT_CHASE,
+        EnumSubscriptionPlan.TRIPE_THREAT,
+        EnumSubscriptionPlan.QUICK_HIT,
+      ],
+      [EnumSubscriptionPlan.BRONZE]: [
+        EnumSubscriptionPlan.BRONZE,
+        EnumSubscriptionPlan.JACKPOT_CHASE,
+        EnumSubscriptionPlan.TRIPE_THREAT,
+        EnumSubscriptionPlan.QUICK_HIT,
+      ],
+      [EnumSubscriptionPlan.JACKPOT_CHASE]: [
+        EnumSubscriptionPlan.JACKPOT_CHASE,
+        EnumSubscriptionPlan.TRIPE_THREAT,
+        EnumSubscriptionPlan.QUICK_HIT,
+      ],
+      [EnumSubscriptionPlan.TRIPE_THREAT]: [
+        EnumSubscriptionPlan.TRIPE_THREAT,
+        EnumSubscriptionPlan.QUICK_HIT,
+      ],
+      [EnumSubscriptionPlan.QUICK_HIT]: [EnumSubscriptionPlan.QUICK_HIT],
     };
 
     const allowedPlans = planAccessLevels[userPlanType];
