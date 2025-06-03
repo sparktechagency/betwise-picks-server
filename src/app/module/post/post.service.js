@@ -107,13 +107,6 @@ const getAllPosts = async (userData, query) => {
         EnumSubscriptionPlan.TRIPE_THREAT,
         EnumSubscriptionPlan.QUICK_HIT,
       ],
-      [EnumSubscriptionPlan.SILVER]: [
-        EnumSubscriptionPlan.SILVER,
-        EnumSubscriptionPlan.BRONZE,
-        EnumSubscriptionPlan.JACKPOT_CHASE,
-        EnumSubscriptionPlan.TRIPE_THREAT,
-        EnumSubscriptionPlan.QUICK_HIT,
-      ],
       [EnumSubscriptionPlan.BRONZE]: [
         EnumSubscriptionPlan.BRONZE,
         EnumSubscriptionPlan.JACKPOT_CHASE,

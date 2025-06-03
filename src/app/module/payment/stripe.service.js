@@ -195,10 +195,12 @@ const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
 
 const getEndDate = (duration) => {
   switch (duration) {
+    case EnumSubscriptionPlanDuration.DAILY:
+      return new Date(new Date().setDate(new Date().getDate() + 1)); //  first hour of next day
     case EnumSubscriptionPlanDuration.MONTHLY:
-      return new Date(new Date().setMonth(new Date().getMonth() + 1)); //  first day of next month
+      return new Date(new Date().setMonth(new Date().getMonth() + 1)); //  first hour of next month
     case EnumSubscriptionPlanDuration.YEARLY:
-      return new Date(new Date().setFullYear(new Date().getFullYear() + 1)); // first day of next year
+      return new Date(new Date().setFullYear(new Date().getFullYear() + 1)); // first hour of next year
     default:
       throw new ApiError(status.BAD_REQUEST, "Invalid duration");
   }
