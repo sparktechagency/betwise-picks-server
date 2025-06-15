@@ -14,6 +14,9 @@ const subscriptionPlanSchema = new Schema(
           EnumSubscriptionPlan.BRONZE,
           EnumSubscriptionPlan.SILVER,
           EnumSubscriptionPlan.GOLD,
+          EnumSubscriptionPlan.JACKPOT_CHASE,
+          EnumSubscriptionPlan.QUICK_HIT,
+          EnumSubscriptionPlan.TRIPE_THREAT,
         ],
         message: `Invalid subscription type. Allowed values: ${Object.values(
           EnumSubscriptionPlan
@@ -33,6 +36,7 @@ const subscriptionPlanSchema = new Schema(
       required: true,
       enum: {
         values: [
+          EnumSubscriptionPlanDuration.DAILY,
           EnumSubscriptionPlanDuration.MONTHLY,
           EnumSubscriptionPlanDuration.YEARLY,
         ],

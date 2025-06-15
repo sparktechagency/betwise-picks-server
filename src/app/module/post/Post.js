@@ -32,6 +32,9 @@ const postSchema = new Schema(
           EnumSubscriptionPlan.BRONZE,
           EnumSubscriptionPlan.SILVER,
           EnumSubscriptionPlan.GOLD,
+          EnumSubscriptionPlan.JACKPOT_CHASE,
+          EnumSubscriptionPlan.QUICK_HIT,
+          EnumSubscriptionPlan.TRIPE_THREAT,
         ],
         message: `Invalid Target user status. Allowed values: ${Object.values(
           EnumSubscriptionPlan

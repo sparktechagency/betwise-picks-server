@@ -4,6 +4,7 @@ const QueryBuilder = require("../../../builder/queryBuilder");
 const ApiError = require("../../../error/ApiError");
 const validateFields = require("../../../util/validateFields");
 const IsVisible = require("./IsVisible");
+const deleteFalsyField = require("../../../util/deleteFalsyField");
 
 const postSubscriptionPlan = async (userData, payload) => {
   validateFields(payload, [
@@ -40,6 +41,8 @@ const getSubscriptionPlan = async (userData, query) => {
 };
 
 const getAllSubscriptionPlans = async (userData, query) => {
+  deleteFalsyField(query);
+
   const subscriptionPlanQuery = new QueryBuilder(
     SubscriptionPlan.find({}).lean(),
     query

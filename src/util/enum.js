@@ -37,6 +37,7 @@ const EnumSubscriptionPlan = {
 };
 
 const EnumSubscriptionPlanDuration = {
+  DAILY: "daily",
   MONTHLY: "monthly",
   YEARLY: "yearly",
 };
