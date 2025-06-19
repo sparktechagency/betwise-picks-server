@@ -1,3 +1,4 @@
+require("dotenv").config();
 const { errorLogger, logger } = require("./util/logger");
 const connectDB = require("./connection/connectDB");
 const config = require("./config");
