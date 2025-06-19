@@ -1,4 +1,3 @@
-require("dotenv").config();
 const { errorLogger, logger } = require("./util/logger");
 const connectDB = require("./connection/connectDB");
 const config = require("./config");
@@ -8,6 +7,7 @@ async function main() {
   try {
     await connectDB();
     logger.info(`DB Connected Successfully at ${new Date().toLocaleString()}`);
+    console.log("JWT_SECRET:", config.jwt.secret);
 
     // mainServer.listen(Number(config.port), config.base_url, () => {
     mainServer.listen(Number(config.port), () => {
