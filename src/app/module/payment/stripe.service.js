@@ -18,8 +18,8 @@ const User = require("../user/User");
 const postNotification = require("../../../util/postNotification");
 
 const stripe = require("stripe")(config.stripe.stripe_secret_key);
-const endPointSecret = config.stripe.stripe_webhook_secret_test;
-// const endPointSecret = config.stripe.stripe_webhook_secret_production;
+// const endPointSecret = config.stripe.stripe_webhook_secret_test;
+const endPointSecret = config.stripe.stripe_webhook_secret_production;
 
 const postCheckout = async (userData, payload) => {
   validateFields(payload, ["subscriptionId"]);
