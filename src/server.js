@@ -8,7 +8,8 @@ async function main() {
     await connectDB();
     logger.info(`DB Connected Successfully at ${new Date().toLocaleString()}`);
 
-    mainServer.listen(Number(config.port), config.base_url, () => {
+    // mainServer.listen(Number(config.port), config.base_url, () => {
+    mainServer.listen(Number(config.port), () => {
       logger.info(`App listening on http://${config.base_url}:${config.port}`);
     });
 
