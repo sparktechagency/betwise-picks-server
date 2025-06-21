@@ -10,6 +10,11 @@ const corsOptions = {
     "http://63.178.140.14:8001", // live server
     "http://63.178.140.14:8002", // live website
     "http://63.178.140.14:8003", // live dashboard
+
+    "http://3.76.70.78:4173", // live dashboard
+    "http://3.76.70.78:8002", // live website
+    "https://betwisepicks.com", // live website
+    "https://admin.betwisepicks.com", // live dashboard
   ],
   credentials: true,
 };
