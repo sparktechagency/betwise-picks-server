@@ -15,12 +15,12 @@ const updateProfile = async (req) => {
   if (data?.profile_image === "")
     throw new ApiError(status.BAD_REQUEST, `Missing profile image`);
 
-  if (files && files.profile_image)
+  if (files && files.profile_image) {
     updateData.profile_image = files.profile_image[0].path;
+    unlinkFile(existingUser.profile_image);
+  }
 
   const existingUser = await User.findById(userId).lean();
-
-  unlinkFile(existingUser.profile_image);
 
   const [auth, user] = await Promise.all([
     Auth.findByIdAndUpdate(
