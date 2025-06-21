@@ -16,7 +16,7 @@ const updateProfile = async (req) => {
 
   if (files && files.profile_image) {
     updatedData.profile_image = files.profile_image[0].path;
-    unlinkFile(existingUser.profile_image);
+    if (existingUser.profile_image) unlinkFile(existingUser.profile_image);
   }
 
   const [auth, admin] = await Promise.all([

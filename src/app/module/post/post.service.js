@@ -242,7 +242,7 @@ const updatePost = async (req) => {
 
     if (!post) throw new ApiError(status.NOT_FOUND, "Post not found");
 
-    unlinkFile(post.post_image);
+    if (post.post_image) unlinkFile(post.post_image);
   }
 
   const post = await Post.findByIdAndUpdate(payload.postId, updateData, {
