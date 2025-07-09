@@ -14,6 +14,7 @@ const corsOptions = {
     "http://3.76.70.78:4173", // live dashboard
     "http://3.76.70.78:8002", // live website
     "https://betwisepicks.com", // live website
+    "https://www.betwisepicks.com", // live website
     "http://betwisepicks.com", // live website
     "https://admin.betwisepicks.com", // live dashboard
     "http://admin.betwisepicks.com", // live dashboard
