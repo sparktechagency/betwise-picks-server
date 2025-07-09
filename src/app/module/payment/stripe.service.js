@@ -20,6 +20,7 @@ const postNotification = require("../../../util/postNotification");
 const stripe = require("stripe")(config.stripe.stripe_secret_key);
 // const endPointSecret = config.stripe.stripe_webhook_secret_test;
 const endPointSecret = config.stripe.stripe_webhook_secret_production;
+// stripe_backup_code = ezgr-nkkm-cmdc-naja-wubc
 
 const postCheckout = async (userData, payload) => {
   validateFields(payload, ["subscriptionId"]);
@@ -99,7 +100,12 @@ const webhookManager = async (req) => {
   console.log("webhook hit");
 
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, endPointSecret);
+    // event = stripe.webhooks.constructEvent(req.body, sig, endPointSecret);
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      "whsec_crbL4B1NFu2SF4mH6MJrJbbK3utahfbH"
+    );
   } catch (error) {
     console.log(error);
     response.status(400).send(`Webhook error: ${error.message}`);
