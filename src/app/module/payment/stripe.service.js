@@ -93,7 +93,11 @@ const postCheckout = async (userData, payload) => {
 const webhookManager = async (req) => {
   console.log("Request Body:=====================================", req.body);
   const sig = req.headers["stripe-signature"];
-  console.log("Content-Type:", req.headers["content-type"]);
+  console.log(
+    "Content-Type:=====================================",
+    req.headers["content-type"]
+  );
+  console.log("Signature:=====================================", sig);
 
   let event;
   const date = new Date();
