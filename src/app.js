@@ -23,7 +23,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/", routes);
 
 app.get("/", async (req, res) => {
-  res.json("Welcome to BetWise Picks");
+  res.status(200).json("Welcome to BetWise Picks");
 });
 
 app.use(globalErrorHandler);
