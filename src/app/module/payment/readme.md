@@ -1,9 +1,1 @@
-Betwisepicks1@outlook.com
-Betwisepicks979361!
-nkelly2016@hotmail.com
 
-stripe recovery code = wcbu xhty huyt csad
-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
-whsec_nSD0vZl4Crgn2Ln867pYsTopfJdVY46f
-
-app password = jcgs wwdo iynw lijj
