@@ -102,7 +102,7 @@ const bookingEmailTemp = (data) =>
               </tr>
             </table>
 
-            <p>We look forward to serving you. If you have any questions, feel free to contact us at <a href="mailto:thakursaad613@gmail.com">thakursaad613@gmail.com</a>.</p>
+            <p>We look forward to serving you. If you have any questions, feel free to contact us at <a href="mailto:Betwisepicks1@outlook.com">Betwisepicks1@outlook.com</a>.</p>
             <p>Best regards,<br>The BetWise Picks Team</p>
           </div>
           <div class="footer">
