@@ -77,7 +77,7 @@ const subscriptionExpiredTemp = (data) =>
             <p>Hello</p>
             <p>We wanted to let you know that your subscription with <strong>BetWise Picks</strong> has expired.</p>
             <p>To continue enjoying our expert picks and premium features, please consider renewing your subscription.</p>
-            <p>If you need any assistance or have questions, feel free to contact us at <a href="mailto:thakursaad613@gmail.com">thakursaad613@gmail.com</a>.</p>
+            <p>If you need any assistance or have questions, feel free to contact us at <a href="mailto:Betwisepicks1@outlook.com">Betwisepicks1@outlook.com</a>.</p>
             <p>Best regards,<br>The BetWise Picks Team</p>
           </div>
           <div class="footer">
