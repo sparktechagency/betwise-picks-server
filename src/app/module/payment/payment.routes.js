@@ -18,6 +18,11 @@ router
     "/get-single-payment",
     auth(auth_level.admin),
     PaymentController.getSinglePayment
+  )
+  .patch(
+    "/update-subscription-status-for-app-user",
+    auth(auth_level.user),
+    PaymentController.updateSubscriptionStatusForAppUser
   );
 
 module.exports = router;

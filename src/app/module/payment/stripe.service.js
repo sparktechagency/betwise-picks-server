@@ -125,6 +125,40 @@ const webhookManager = async (req) => {
   }
 };
 
+const updateSubscriptionStatusForAppUser = async (userData, payload) => {
+  validateFields(payload, ["isSubscribed", "subscriptionType"]);
+  const { isSubscribed, subscriptionType } = payload;
+
+  if (
+    subscriptionType !== EnumSubscriptionPlanDuration.MONTHLY &&
+    subscriptionType !== EnumSubscriptionPlanDuration.YEARLY
+  )
+    throw new ApiError(status.BAD_REQUEST, "Invalid subscription type");
+
+  // set subscriptionEndDate to next month or year based on subscriptionType
+  let subscriptionEndDate;
+  if (subscriptionType === EnumSubscriptionPlanDuration.MONTHLY)
+    subscriptionEndDate = getEndDate(EnumSubscriptionPlanDuration.MONTHLY);
+  else if (subscriptionType === EnumSubscriptionPlanDuration.YEARLY)
+    subscriptionEndDate = getEndDate(EnumSubscriptionPlanDuration.YEARLY);
+
+  const updateUserData = {
+    $set: {
+      isSubscribed,
+      subscriptionStartDate: new Date(Date.now()),
+      subscriptionEndDate,
+    },
+  };
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userData.userId,
+    updateUserData,
+    { new: true, runValidators: true }
+  );
+
+  return updatedUser;
+};
+
 // ** utility function
 
 const updatePaymentAndRelatedAndSendMail = async (webhookEventData) => {
@@ -296,6 +330,7 @@ cron.schedule("0 0 * * *", () => {
 const StripeService = {
   postCheckout,
   webhookManager,
+  updateSubscriptionStatusForAppUser,
 };
 
 module.exports = StripeService;
