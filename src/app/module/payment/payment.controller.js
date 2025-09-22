@@ -46,6 +46,19 @@ const getSinglePayment = catchAsync(async (req, res) => {
   });
 });
 
+const updateSubscriptionStatusForAppUser = catchAsync(async (req, res) => {
+  const result = await StripeService.updateSubscriptionStatusForAppUser(
+    req.user,
+    req.body
+  );
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "App user subscription status updated successfully",
+    data: result,
+  });
+});
+
 const PaymentController = {
   successPage,
   cancelPage,
@@ -53,6 +66,7 @@ const PaymentController = {
   webhookManager,
   getAllPayment,
   getSinglePayment,
+  updateSubscriptionStatusForAppUser,
 };
 
 module.exports = { PaymentController };
