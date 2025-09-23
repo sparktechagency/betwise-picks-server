@@ -63,6 +63,7 @@ const getAllPosts = async (userData, query) => {
    * If the user is subscribed to a plan but the target user does not match any of the allowed plans,
    * it throws an error.
    * If the subscription plan visibility is disabled, it returns all posts.
+   * for app user, it returns posts based on the package type and query appUser
    * @param {Object} userData - user data
    * @param {Object} query - query object
    * @return {Object} - list of posts and meta data
