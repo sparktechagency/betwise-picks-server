@@ -70,25 +70,28 @@ const getAllPosts = async (userData, query) => {
 
   const [user, isVisibleDoc] = await Promise.all([
     User.findById(userData.userId)
-      .select("isSubscribed subscriptionPlan")
+      .select("isSubscribed subscriptionPlan packageType")
       .populate("subscriptionPlan", "subscriptionType")
       .lean()
       .hint({ _id: 1 }),
 
     IsVisible.findOne({}).lean(),
   ]);
-
   const isVisible = isVisibleDoc?.isVisible;
 
   deleteFalsyField(query);
+  const { appUser, ...newQuery } = query || {};
 
-  let baseQuery = { ...query.filter };
+  const baseQuery = { ...newQuery.filter };
 
   if (isVisible) {
     if (!user?.isSubscribed)
       throw new ApiError(status.BAD_REQUEST, "User is not subscribed");
 
-    const userPlanType = user.subscriptionPlan?.subscriptionType;
+    const userPlanType = appUser
+      ? user.packageType
+      : user.subscriptionPlan?.subscriptionType;
+
     if (!userPlanType) throw new ApiError(status.BAD_REQUEST, "Invalid plan");
 
     const planAccessLevels = {
@@ -126,6 +129,7 @@ const getAllPosts = async (userData, query) => {
     };
 
     const allowedPlans = planAccessLevels[userPlanType];
+
     if (!allowedPlans)
       throw new ApiError(status.BAD_REQUEST, "Invalid subscription type");
 
@@ -139,7 +143,7 @@ const getAllPosts = async (userData, query) => {
     baseQuery.targetUser = { $in: allowedPlans };
   }
 
-  const postQuery = new QueryBuilder(Post.find(baseQuery).lean(), query)
+  const postQuery = new QueryBuilder(Post.find(baseQuery).lean(), newQuery)
     .search(["postTitle", "predictionDescription", "predictionType"])
     .filter()
     .sort()

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { EnumSubscriptionPlan } = require("../../../util/enum");
 const ObjectId = mongoose.Schema.Types.ObjectId;
 
 const { Schema, model, Types } = mongoose;
@@ -38,6 +39,21 @@ const UserSchema = new Schema(
     subscriptionPlan: {
       type: ObjectId,
       ref: "SubscriptionPlan",
+    },
+    packageType: {
+      type: String,
+      enum: {
+        values: [
+          EnumSubscriptionPlan.GOLD,
+          EnumSubscriptionPlan.SILVER,
+          EnumSubscriptionPlan.BRONZE,
+        ],
+        message: `Invalid package type. Allowed values are ${[
+          EnumSubscriptionPlan.GOLD,
+          EnumSubscriptionPlan.SILVER,
+          EnumSubscriptionPlan.BRONZE,
+        ].join(", ")}.`,
+      },
     },
     subscriptionStartDate: {
       type: Date,
