@@ -13,6 +13,7 @@ const {
   EnumPaymentStatus,
   EnumSubscriptionPlanDuration,
   EnumSubscriptionStatus,
+  EnumSubscriptionPlan,
 } = require("../../../util/enum");
 const User = require("../user/User");
 const postNotification = require("../../../util/postNotification");
@@ -126,14 +127,21 @@ const webhookManager = async (req) => {
 };
 
 const updateSubscriptionStatusForAppUser = async (userData, payload) => {
-  validateFields(payload, ["isSubscribed", "subscriptionType"]);
-  const { isSubscribed, subscriptionType } = payload;
+  validateFields(payload, ["isSubscribed", "subscriptionType", "packageType"]);
+  const { isSubscribed, subscriptionType, packageType } = payload;
 
   if (
     subscriptionType !== EnumSubscriptionPlanDuration.MONTHLY &&
     subscriptionType !== EnumSubscriptionPlanDuration.YEARLY
   )
     throw new ApiError(status.BAD_REQUEST, "Invalid subscription type");
+
+  if (
+    packageType !== EnumSubscriptionPlan.GOLD &&
+    packageType !== EnumSubscriptionPlan.SILVER &&
+    packageType !== EnumSubscriptionPlan.BRONZE
+  )
+    throw new ApiError(status.BAD_REQUEST, "Invalid package type");
 
   // set subscriptionEndDate to next month or year based on subscriptionType
   let subscriptionEndDate;
@@ -147,6 +155,7 @@ const updateSubscriptionStatusForAppUser = async (userData, payload) => {
       isSubscribed,
       subscriptionStartDate: new Date(Date.now()),
       subscriptionEndDate,
+      packageType,
     },
   };
 
