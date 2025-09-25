@@ -145,6 +145,7 @@ const updateSubscriptionStatusForAppUser = async (userData, payload) => {
 
   // set subscriptionEndDate to next month or year based on subscriptionType
   let subscriptionEndDate;
+  const subscriptionStartDate = new Date(Date.now());
   if (subscriptionType === EnumSubscriptionPlanDuration.MONTHLY)
     subscriptionEndDate = getEndDate(EnumSubscriptionPlanDuration.MONTHLY);
   else if (subscriptionType === EnumSubscriptionPlanDuration.YEARLY)
@@ -153,7 +154,7 @@ const updateSubscriptionStatusForAppUser = async (userData, payload) => {
   const updateUserData = {
     $set: {
       isSubscribed,
-      subscriptionStartDate: new Date(Date.now()),
+      subscriptionStartDate,
       subscriptionEndDate,
       packageType,
     },
@@ -163,6 +164,31 @@ const updateSubscriptionStatusForAppUser = async (userData, payload) => {
     userData.userId,
     updateUserData,
     { new: true, runValidators: true }
+  );
+
+  // send email to user
+  const emailData = {
+    name: updatedUser.name,
+    subscriptionPlan: packageType,
+    price: "n/a",
+    currency: "USD",
+    startDate: subscriptionStartDate,
+    endDate: subscriptionEndDate,
+    payment_intent_id: "n/a",
+  };
+
+  EmailHelpers.sendSubscriptionEmail(updatedUser.email, emailData);
+
+  // send notification
+  postNotification(
+    "Subscription Success",
+    "Your subscription has been successfully updated.",
+    updatedUser._id
+  );
+
+  postNotification(
+    "New Subscriber",
+    "BetWise Picks got a new subscriber. Check it out!"
   );
 
   return updatedUser;
