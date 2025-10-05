@@ -131,67 +131,89 @@ const updateSubscriptionStatusForAppUser = async (userData, payload) => {
   const { isSubscribed, subscriptionType, packageType } = payload;
 
   if (
-    subscriptionType !== EnumSubscriptionPlanDuration.MONTHLY &&
-    subscriptionType !== EnumSubscriptionPlanDuration.YEARLY
-  )
-    throw new ApiError(status.BAD_REQUEST, "Invalid subscription type");
+    isSubscribed === "no" &&
+    subscriptionType === "no" &&
+    packageType === "no"
+  ) {
+    const updateUserData = {
+      $set: {
+        isSubscribed,
+        subscriptionPlan: null,
+        subscriptionStartDate: null,
+        subscriptionEndDate: null,
+        packageType: null,
+      },
+    };
+    const updatedUser = await User.findByIdAndUpdate(
+      userData.userId,
+      updateUserData,
+      { new: true, runValidators: true }
+    );
+    return updatedUser;
+  } else {
+    if (
+      subscriptionType !== EnumSubscriptionPlanDuration.MONTHLY &&
+      subscriptionType !== EnumSubscriptionPlanDuration.YEARLY
+    )
+      throw new ApiError(status.BAD_REQUEST, "Invalid subscription type");
 
-  if (
-    packageType !== EnumSubscriptionPlan.GOLD &&
-    packageType !== EnumSubscriptionPlan.SILVER &&
-    packageType !== EnumSubscriptionPlan.BRONZE
-  )
-    throw new ApiError(status.BAD_REQUEST, "Invalid package type");
+    if (
+      packageType !== EnumSubscriptionPlan.GOLD &&
+      packageType !== EnumSubscriptionPlan.SILVER &&
+      packageType !== EnumSubscriptionPlan.BRONZE
+    )
+      throw new ApiError(status.BAD_REQUEST, "Invalid package type");
 
-  // set subscriptionEndDate to next month or year based on subscriptionType
-  let subscriptionEndDate;
-  const subscriptionStartDate = new Date(Date.now());
-  if (subscriptionType === EnumSubscriptionPlanDuration.MONTHLY)
-    subscriptionEndDate = getEndDate(EnumSubscriptionPlanDuration.MONTHLY);
-  else if (subscriptionType === EnumSubscriptionPlanDuration.YEARLY)
-    subscriptionEndDate = getEndDate(EnumSubscriptionPlanDuration.YEARLY);
+    // set subscriptionEndDate to next month or year based on subscriptionType
+    let subscriptionEndDate;
+    const subscriptionStartDate = new Date(Date.now());
+    if (subscriptionType === EnumSubscriptionPlanDuration.MONTHLY)
+      subscriptionEndDate = getEndDate(EnumSubscriptionPlanDuration.MONTHLY);
+    else if (subscriptionType === EnumSubscriptionPlanDuration.YEARLY)
+      subscriptionEndDate = getEndDate(EnumSubscriptionPlanDuration.YEARLY);
 
-  const updateUserData = {
-    $set: {
-      isSubscribed,
-      subscriptionStartDate,
-      subscriptionEndDate,
-      packageType,
-    },
-  };
+    const updateUserData = {
+      $set: {
+        isSubscribed,
+        subscriptionStartDate,
+        subscriptionEndDate,
+        packageType,
+      },
+    };
 
-  const updatedUser = await User.findByIdAndUpdate(
-    userData.userId,
-    updateUserData,
-    { new: true, runValidators: true }
-  );
+    const updatedUser = await User.findByIdAndUpdate(
+      userData.userId,
+      updateUserData,
+      { new: true, runValidators: true }
+    );
 
-  // send email to user
-  const emailData = {
-    name: updatedUser.name,
-    subscriptionPlan: packageType,
-    price: "n/a",
-    currency: "USD",
-    startDate: subscriptionStartDate,
-    endDate: subscriptionEndDate,
-    payment_intent_id: "n/a",
-  };
+    // send email to user
+    const emailData = {
+      name: updatedUser.name,
+      subscriptionPlan: packageType,
+      price: "n/a",
+      currency: "USD",
+      startDate: subscriptionStartDate,
+      endDate: subscriptionEndDate,
+      payment_intent_id: "n/a",
+    };
 
-  EmailHelpers.sendSubscriptionEmail(updatedUser.email, emailData);
+    EmailHelpers.sendSubscriptionEmail(updatedUser.email, emailData);
 
-  // send notification
-  postNotification(
-    "Subscription Success",
-    "Your subscription has been successfully updated.",
-    updatedUser._id
-  );
+    // send notification
+    postNotification(
+      "Subscription Success",
+      "Your subscription has been successfully updated.",
+      updatedUser._id
+    );
 
-  postNotification(
-    "New Subscriber",
-    "BetWise Picks got a new subscriber. Check it out!"
-  );
+    postNotification(
+      "New Subscriber",
+      "BetWise Picks got a new subscriber. Check it out!"
+    );
 
-  return updatedUser;
+    return updatedUser;
+  }
 };
 
 // ** utility function
