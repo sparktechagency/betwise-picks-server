@@ -83,5 +83,48 @@ npm i express bcrypt mongo mongodb mongoose cors jsonwebtoken dotenv ejs express
 
 </details>
 
-BetWise Picks
-wcbu xhty huyt csad
+### stripe.service.js Changes (app-server branch)
+
+### Branch Information
+
+<details>
+<summary>🌿 Branches</summary>
+
+- **app-server**: App server specifically
+- **main**: Website and admin dashboard
+- **Note**: Both branches run on different IPs but share the same database
+
+</details>
+
+
+<details>
+<summary>📝 Stripe Service Updates</summary>
+
+#### Imports
+- Added `EnumSubscriptionPlan` to destructured imports from enum utility
+
+#### New Function: `updateSubscriptionStatusForAppUser`
+A new ~90 line function that manages app user subscriptions with the following features:
+
+**Payload Validation**
+- `isSubscribed`
+- `subscriptionType`
+- `packageType`
+
+**Unsubscribe Scenario**
+- Clears user subscription data when all values are "no"
+- Removes subscription plan, start/end dates, and package type
+
+**Subscribe Scenario**
+- Validates subscription type: `MONTHLY` | `YEARLY`
+- Validates package type: `GOLD` | `SILVER` | `BRONZE`
+- Calculates subscription end dates
+- Updates user data
+- Sends subscription email via `EmailHelpers.sendSubscriptionEmail()`
+- Posts notifications to user and admins
+
+#### Exports
+- Added `updateSubscriptionStatusForAppUser` to StripeService exports
+
+</details>
+
